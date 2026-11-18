@@ -1,5 +1,5 @@
 -- ============================================================
---  Help Desk Ticketing System – Database Schema
+--  Help Desk Ticketing System ? Database Schema
 --  Run this script once to initialize the database.
 -- ============================================================
 
@@ -7,7 +7,7 @@
 -- CREATE DATABASE IF NOT EXISTS helpdesk CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 -- USE helpdesk;
 
--- ── users ─────────────────────────────────────────────────────────────────────
+-- ?? users ?????????????????????????????????????????????????????????????????????
 CREATE TABLE IF NOT EXISTS users (
     user_id       INT          NOT NULL AUTO_INCREMENT,
     name          VARCHAR(100) NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     UNIQUE KEY uq_users_email (email)
 ) ENGINE=InnoDB;
 
--- ── agents ────────────────────────────────────────────────────────────────────
+-- ?? agents ????????????????????????????????????????????????????????????????????
 CREATE TABLE IF NOT EXISTS agents (
     agent_id  INT     NOT NULL AUTO_INCREMENT,
     user_id   INT     NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS agents (
         FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
--- ── tickets ───────────────────────────────────────────────────────────────────
+-- ?? tickets ???????????????????????????????????????????????????????????????????
 CREATE TABLE IF NOT EXISTS tickets (
     ticket_id   INT          NOT NULL AUTO_INCREMENT,
     user_id     INT          NOT NULL,
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS tickets (
         FOREIGN KEY (agent_id) REFERENCES agents(agent_id) ON DELETE SET NULL
 ) ENGINE=InnoDB;
 
--- ── ticket_notes ──────────────────────────────────────────────────────────────
+-- ?? ticket_notes ??????????????????????????????????????????????????????????????
 CREATE TABLE IF NOT EXISTS ticket_notes (
     note_id    INT       NOT NULL AUTO_INCREMENT,
     ticket_id  INT       NOT NULL,
@@ -69,11 +69,11 @@ CREATE TABLE IF NOT EXISTS ticket_notes (
 -- ============================================================
 
 INSERT IGNORE INTO users (name, email, password_hash, role) VALUES
-    ('Admin User',  'admin@helpdesk.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'ADMIN'),
-    ('Agent One',   'agent1@helpdesk.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'AGENT'),
-    ('Agent Two',   'agent2@helpdesk.com', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'AGENT'),
-    ('User One',    'user1@helpdesk.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'USER'),
-    ('User Two',    'user2@helpdesk.com',  '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'USER');
+    ('Admin User',  'admin@helpdesk.com',  '$2a$10$1u0wY6EUdvvWLBXlS6HafuIqKF3jk5xkJUHJMSHWp.Hh2o3rNm5eG', 'ADMIN'),
+    ('Agent One',   'agent1@helpdesk.com', '$2a$10$1u0wY6EUdvvWLBXlS6HafuIqKF3jk5xkJUHJMSHWp.Hh2o3rNm5eG', 'AGENT'),
+    ('Agent Two',   'agent2@helpdesk.com', '$2a$10$1u0wY6EUdvvWLBXlS6HafuIqKF3jk5xkJUHJMSHWp.Hh2o3rNm5eG', 'AGENT'),
+    ('User One',    'user1@helpdesk.com',  '$2a$10$1u0wY6EUdvvWLBXlS6HafuIqKF3jk5xkJUHJMSHWp.Hh2o3rNm5eG', 'USER'),
+    ('User Two',    'user2@helpdesk.com',  '$2a$10$1u0wY6EUdvvWLBXlS6HafuIqKF3jk5xkJUHJMSHWp.Hh2o3rNm5eG', 'USER');
 
 -- Register the two agent users in the agents table
 INSERT IGNORE INTO agents (user_id, available)
