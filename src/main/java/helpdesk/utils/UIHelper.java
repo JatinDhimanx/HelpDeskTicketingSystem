@@ -133,7 +133,7 @@ public class UIHelper {
         DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
         centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // Alternating row colors
+        // Alternating row colors with clean text padding
         table.setDefaultRenderer(Object.class, new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object value,
@@ -143,6 +143,7 @@ public class UIHelper {
                     setBackground(row % 2 == 0 ? Color.WHITE : new Color(249, 250, 251));
                     setForeground(UIConstants.TEXT_PRIMARY);
                 }
+                setBorder(BorderFactory.createEmptyBorder(0, 8, 0, 8));
                 return this;
             }
         });

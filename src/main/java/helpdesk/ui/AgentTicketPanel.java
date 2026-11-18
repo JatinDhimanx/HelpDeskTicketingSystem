@@ -61,7 +61,7 @@ public class AgentTicketPanel extends JPanel {
         title.setForeground(UIConstants.TEXT_PRIMARY);
 
         String agentInfo = currentAgent != null ? "Logged in as Agent #" + currentAgent.getAgentId() + " (" + currentUser.getName() + ")" : currentUser.getName();
-        JLabel subtitle = new JLabel(agentInfo + " ? Update ticket statuses, append resolution progress and close tickets.");
+        JLabel subtitle = new JLabel(agentInfo + " - Update ticket statuses, append resolution progress and close tickets.");
         subtitle.setFont(UIConstants.FONT_BODY);
         subtitle.setForeground(UIConstants.TEXT_SECONDARY);
 
@@ -85,7 +85,7 @@ public class AgentTicketPanel extends JPanel {
         tableHeader.setOpaque(false);
         JLabel tableTitle = new JLabel("My Assigned Tickets");
         tableTitle.setFont(UIConstants.FONT_HEADING);
-        JButton refreshBtn = new JButton("?? Refresh");
+        JButton refreshBtn = new JButton("Refresh");
         refreshBtn.setFont(UIConstants.FONT_SMALL);
         refreshBtn.addActionListener(e -> loadAgentTickets());
         tableHeader.add(tableTitle, BorderLayout.WEST);
@@ -101,6 +101,7 @@ public class AgentTicketPanel extends JPanel {
         UIHelper.styleTable(ticketTable);
         ticketTable.setRowHeight(30);
         ticketTable.getColumnModel().getColumn(3).setCellRenderer(new PriorityRenderer());
+        ticketTable.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
         ticketTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 onTicketSelected();

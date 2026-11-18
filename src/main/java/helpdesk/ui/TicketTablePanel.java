@@ -110,6 +110,7 @@ public class TicketTablePanel extends JPanel {
         ticketTable.getColumnModel().getColumn(7).setPreferredWidth(140);
 
         ticketTable.getColumnModel().getColumn(3).setCellRenderer(new PriorityRenderer());
+        ticketTable.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
 
         JScrollPane scrollPane = new JScrollPane(ticketTable);
         scrollPane.setBorder(BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1));
@@ -122,7 +123,7 @@ public class TicketTablePanel extends JPanel {
         countLabel.setForeground(UIConstants.TEXT_SECONDARY);
         footerPanel.add(countLabel, BorderLayout.WEST);
 
-        JButton refreshBtn = new JButton("?? Refresh Data");
+        JButton refreshBtn = new JButton("Refresh Data");
         refreshBtn.setFont(UIConstants.FONT_SMALL);
         refreshBtn.setFocusPainted(false);
         refreshBtn.addActionListener(e -> refreshTickets());

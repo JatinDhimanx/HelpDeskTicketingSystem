@@ -1,14 +1,16 @@
 package helpdesk.core;
 
+import com.formdev.flatlaf.FlatLightLaf;
 import helpdesk.ui.LoginWindow;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.swing.*;
+import java.awt.*;
 
 /**
  * Application Entry Point.
- * Sets clean Look and Feel, starts background escalation thread, and shows Login UI.
+ * Sets modern FlatLaf Look and Feel, starts background escalation daemon, and displays Login UI.
  */
 public class Main {
 
@@ -20,9 +22,29 @@ public class Main {
         System.out.println("==========================================");
 
         try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            logger.warn("Could not set System Look and Feel: {}", e.getMessage());
+            // Apply FlatLaf Modern Look & Feel
+            FlatLightLaf.setup();
+
+            // Refined enterprise UI properties
+            UIManager.put("Button.arc", 8);
+            UIManager.put("Component.arc", 8);
+            UIManager.put("CheckBox.arc", 6);
+            UIManager.put("ProgressBar.arc", 8);
+            UIManager.put("TextComponent.arc", 8);
+            UIManager.put("ScrollBar.thumbArc", 8);
+            UIManager.put("ScrollBar.width", 10);
+            UIManager.put("TabbedPane.showTabSeparators", true);
+            UIManager.put("Table.intercellSpacing", new Dimension(0, 1));
+            UIManager.put("Table.showHorizontalLines", true);
+            UIManager.put("Table.showVerticalLines", false);
+            UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 13));
+        } catch (Throwable t) {
+            logger.warn("FlatLaf setup failed, falling back to system Look and Feel: {}", t.getMessage());
+            try {
+                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+            } catch (Exception e) {
+                logger.warn("Could not set System Look and Feel: {}", e.getMessage());
+            }
         }
 
         try {

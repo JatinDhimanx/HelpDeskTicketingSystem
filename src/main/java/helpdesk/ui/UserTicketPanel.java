@@ -64,7 +64,7 @@ public class UserTicketPanel extends JPanel {
         statusFilter.addActionListener(e -> loadTickets());
         filterRow.add(statusFilter);
 
-        JButton refreshBtn = new JButton("?? Refresh");
+        JButton refreshBtn = new JButton("Refresh");
         refreshBtn.setFont(UIConstants.FONT_SMALL);
         refreshBtn.addActionListener(e -> loadTickets());
         filterRow.add(refreshBtn);
@@ -94,6 +94,7 @@ public class UserTicketPanel extends JPanel {
         UIHelper.styleTable(ticketTable);
         ticketTable.setRowHeight(30);
         ticketTable.getColumnModel().getColumn(3).setCellRenderer(new PriorityRenderer());
+        ticketTable.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
         ticketTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 onTicketSelected();

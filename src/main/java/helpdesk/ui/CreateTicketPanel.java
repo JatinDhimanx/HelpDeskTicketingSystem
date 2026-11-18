@@ -207,11 +207,11 @@ public class CreateTicketPanel extends JPanel {
 
     private void showSuccess(String msg) {
         statusFeedbackLabel.setForeground(UIConstants.SUCCESS_COLOR);
-        statusFeedbackLabel.setText("? " + msg);
+        statusFeedbackLabel.setText("[OK] " + msg);
     }
 
     private void showError(String msg) {
         statusFeedbackLabel.setForeground(UIConstants.ERROR_COLOR);
-        statusFeedbackLabel.setText("? " + msg);
+        statusFeedbackLabel.setText("[!] " + msg);
     }
 }

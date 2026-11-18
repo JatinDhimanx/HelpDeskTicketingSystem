@@ -29,7 +29,7 @@ public class AgentDashboard extends JFrame {
     private JButton toggleAvailBtn;
 
     public AgentDashboard(User user) {
-        super("Help Desk ? Agent Workspace (" + user.getName() + ")");
+        super("Help Desk - Agent Workspace (" + user.getName() + ")");
         this.currentUser = user;
         this.agentService = new AgentService();
         this.agent = agentService.getAgentByUserId(user.getUserId()).orElse(null);
@@ -106,8 +106,8 @@ public class AgentDashboard extends JFrame {
         sidebar.add(navLabel);
         sidebar.add(Box.createVerticalStrut(12));
 
-        assignedNavBtn = createNavButton("?? My Assigned Tickets", true);
-        allTicketsNavBtn = createNavButton("?? All System Tickets", false);
+        assignedNavBtn = createNavButton("My Assigned Tickets", true);
+        allTicketsNavBtn = createNavButton("All System Tickets", false);
 
         assignedNavBtn.addActionListener(e -> {
             selectNav(assignedNavBtn);
@@ -125,6 +125,23 @@ public class AgentDashboard extends JFrame {
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(allTicketsNavBtn);
         sidebar.add(Box.createVerticalGlue());
+
+        JPanel systemStatus = new JPanel();
+        systemStatus.setLayout(new BoxLayout(systemStatus, BoxLayout.Y_AXIS));
+        systemStatus.setBackground(new Color(248, 250, 252));
+        systemStatus.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        systemStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
+        systemStatus.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+
+        JLabel statusDb = new JLabel("Database: Connected");
+        statusDb.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        statusDb.setForeground(new Color(22, 101, 52));
+        systemStatus.add(statusDb);
+
+        sidebar.add(systemStatus);
 
         root.add(sidebar, BorderLayout.WEST);
 

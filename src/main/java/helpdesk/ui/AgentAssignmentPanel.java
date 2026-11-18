@@ -72,7 +72,7 @@ public class AgentAssignmentPanel extends JPanel {
         tableHeader.setOpaque(false);
         JLabel tableTitle = new JLabel("All Open & Assigned Tickets");
         tableTitle.setFont(UIConstants.FONT_HEADING);
-        JButton refreshBtn = new JButton("?? Refresh");
+        JButton refreshBtn = new JButton("Refresh");
         refreshBtn.setFont(UIConstants.FONT_SMALL);
         refreshBtn.addActionListener(e -> {
             loadTickets();
@@ -91,6 +91,7 @@ public class AgentAssignmentPanel extends JPanel {
         UIHelper.styleTable(ticketTable);
         ticketTable.setRowHeight(30);
         ticketTable.getColumnModel().getColumn(3).setCellRenderer(new PriorityRenderer());
+        ticketTable.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
         ticketTable.getSelectionModel().addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
                 onTicketSelected();

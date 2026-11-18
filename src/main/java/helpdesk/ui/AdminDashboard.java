@@ -27,7 +27,7 @@ public class AdminDashboard extends JFrame {
     private JButton reportsNavBtn;
 
     public AdminDashboard(User user) {
-        super("Help Desk ? Administration Control Center (" + user.getName() + ")");
+        super("Help Desk - Administration Console (" + user.getName() + ")");
         this.currentUser = user;
         this.cardLayout = new CardLayout();
         this.contentContainer = new JPanel(this.cardLayout);
@@ -98,10 +98,10 @@ public class AdminDashboard extends JFrame {
         sidebar.add(navLabel);
         sidebar.add(Box.createVerticalStrut(12));
 
-        allTicketsNavBtn = createNavButton("?? All Tickets", true);
-        assignAgentsNavBtn = createNavButton("?? Agent Assignment", false);
-        createTicketNavBtn = createNavButton("? Create Ticket", false);
-        reportsNavBtn = createNavButton("?? Reports & Analytics", false);
+        allTicketsNavBtn = createNavButton("All Tickets", true);
+        assignAgentsNavBtn = createNavButton("Agent Assignment", false);
+        createTicketNavBtn = createNavButton("Create Ticket", false);
+        reportsNavBtn = createNavButton("Reports & Analytics", false);
 
         allTicketsNavBtn.addActionListener(e -> {
             selectNav(allTicketsNavBtn);
@@ -135,6 +135,30 @@ public class AdminDashboard extends JFrame {
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(reportsNavBtn);
         sidebar.add(Box.createVerticalGlue());
+
+        JPanel systemStatus = new JPanel();
+        systemStatus.setLayout(new BoxLayout(systemStatus, BoxLayout.Y_AXIS));
+        systemStatus.setBackground(new Color(248, 250, 252));
+        systemStatus.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(226, 232, 240), 1),
+                BorderFactory.createEmptyBorder(8, 10, 8, 10)
+        ));
+        systemStatus.setAlignmentX(Component.LEFT_ALIGNMENT);
+        systemStatus.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+
+        JLabel statusDb = new JLabel("Database: Connected");
+        statusDb.setFont(new Font("Segoe UI", Font.BOLD, 11));
+        statusDb.setForeground(new Color(22, 101, 52));
+
+        JLabel statusEsc = new JLabel("Escalation Engine: Active");
+        statusEsc.setFont(new Font("Segoe UI", Font.PLAIN, 11));
+        statusEsc.setForeground(UIConstants.TEXT_SECONDARY);
+
+        systemStatus.add(statusDb);
+        systemStatus.add(Box.createVerticalStrut(2));
+        systemStatus.add(statusEsc);
+
+        sidebar.add(systemStatus);
 
         root.add(sidebar, BorderLayout.WEST);
 

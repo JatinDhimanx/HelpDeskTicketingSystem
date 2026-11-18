@@ -59,7 +59,7 @@ public class ReportsDashboardPanel extends JPanel {
         titleBox.add(title, BorderLayout.NORTH);
         titleBox.add(subtitle, BorderLayout.SOUTH);
 
-        JButton refreshBtn = UIHelper.createStyledButton("?? Refresh Reports", UIConstants.PRIMARY_COLOR, Color.WHITE);
+        JButton refreshBtn = UIHelper.createStyledButton("Refresh Reports", UIConstants.PRIMARY_COLOR, Color.WHITE);
         refreshBtn.setPreferredSize(new Dimension(160, 36));
         refreshBtn.addActionListener(e -> refreshAllReports());
 
@@ -170,12 +170,13 @@ public class ReportsDashboardPanel extends JPanel {
         UIHelper.styleTable(table);
         table.setRowHeight(30);
         table.getColumnModel().getColumn(3).setCellRenderer(new PriorityRenderer());
+        table.getColumnModel().getColumn(4).setCellRenderer(new StatusRenderer());
         panel.add(new JScrollPane(table), BorderLayout.CENTER);
         return panel;
     }
 
     public void refreshAllReports() {
-        avgResolutionLabel.setText("? Loading live report metrics...");
+        avgResolutionLabel.setText("Loading live report metrics...");
 
         SwingWorker<ReportData, Void> worker = new SwingWorker<>() {
             @Override
@@ -206,7 +207,7 @@ public class ReportsDashboardPanel extends JPanel {
                     inProgressCard.setValue(String.valueOf(inProgress));
                     resolvedCard.setValue(String.valueOf(resolved));
 
-                    avgResolutionLabel.setText("? Average Resolution Time: " + data.avgHours + " hours (" + Math.round(data.avgHours / 24.0 * 10.0) / 10.0 + " days)");
+                    avgResolutionLabel.setText("Average Resolution Time: " + data.avgHours + " hours (" + Math.round(data.avgHours / 24.0 * 10.0) / 10.0 + " days)");
 
                     categoryTableModel.setRowCount(0);
                     for (Map.Entry<String, Integer> e : data.catMap.entrySet()) {
