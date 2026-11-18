@@ -1,0 +1,7 @@
+target/
+.gradle/
+*.class
+.idea/
+*.iml
+.vscode/
+sources.txt
