@@ -12,15 +12,15 @@ import java.awt.event.*;
 
 /**
  * Professional login window for the Help Desk Ticketing System.
- * Authenticates users and routes them to the appropriate dashboard.
+ * Authenticates users asynchronously and routes them to the appropriate dashboard.
  */
 public class LoginWindow extends JFrame {
 
-    // ?? Form fields (accessible for validation) ???????????????????????????????
-    private JTextField    emailField;
+    private JTextField     emailField;
     private JPasswordField passwordField;
-    private JLabel        emailError;
-    private JLabel        passwordError;
+    private JLabel         emailError;
+    private JLabel         passwordError;
+    private JButton        loginBtn;
 
     private final AuthService authService = new AuthService();
 
@@ -31,12 +31,10 @@ public class LoginWindow extends JFrame {
         setSize(440, 520);
         setLocationRelativeTo(null);
 
-        // ?? Root content pane ?????????????????????????????????????????????????
         JPanel root = new JPanel(new BorderLayout());
         root.setBackground(UIConstants.BACKGROUND_COLOR);
         setContentPane(root);
 
-        // ?? Top banner ????????????????????????????????????????????????????????
         JPanel banner = new JPanel();
         banner.setBackground(UIConstants.PRIMARY_COLOR);
         banner.setBorder(BorderFactory.createEmptyBorder(28, 20, 28, 20));
@@ -57,11 +55,9 @@ public class LoginWindow extends JFrame {
         banner.add(subtitle);
         root.add(banner, BorderLayout.NORTH);
 
-        // ?? Card panel (white, rounded shadow illusion) ???????????????????????
         JPanel card = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
-                // paint rounded white background
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 g2.setColor(UIConstants.CARD_COLOR);
@@ -78,7 +74,6 @@ public class LoginWindow extends JFrame {
                 BorderFactory.createEmptyBorder(28, 36, 28, 36)
         ));
 
-        // ?? Email ?????????????????????????????????????????????????????????????
         JLabel emailLabel = new JLabel("Email Address");
         emailLabel.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD));
         emailLabel.setForeground(UIConstants.TEXT_PRIMARY);
@@ -90,13 +85,11 @@ public class LoginWindow extends JFrame {
         emailError = createErrorLabel("Please enter your email address.");
         emailError.setVisible(false);
 
-        // ?? Password ??????????????????????????????????????????????????????????
         JLabel passwordLabel = new JLabel("Password");
         passwordLabel.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD));
         passwordLabel.setForeground(UIConstants.TEXT_PRIMARY);
         passwordLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Password row: field + toggle button
         JPanel passwordRow = new JPanel(new BorderLayout(4, 0));
         passwordRow.setOpaque(false);
         passwordRow.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -131,20 +124,16 @@ public class LoginWindow extends JFrame {
         passwordError = createErrorLabel("Please enter your password.");
         passwordError.setVisible(false);
 
-        // ?? Login button ??????????????????????????????????????????????????????
-        JButton loginBtn = UIHelper.createStyledButton("Login", UIConstants.PRIMARY_COLOR, Color.WHITE);
+        loginBtn = UIHelper.createStyledButton("Login", UIConstants.PRIMARY_COLOR, Color.WHITE);
         loginBtn.setAlignmentX(Component.LEFT_ALIGNMENT);
         loginBtn.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
         loginBtn.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 14f));
-
         loginBtn.addActionListener(e -> handleLogin());
 
-        // Allow Enter key to trigger login from both fields
         ActionListener loginAction = e -> handleLogin();
         emailField.addActionListener(loginAction);
         passwordField.addActionListener(loginAction);
 
-        // ?? Assemble card ?????????????????????????????????????????????????????
         card.add(emailLabel);
         card.add(Box.createVerticalStrut(6));
         card.add(emailField);
@@ -157,22 +146,18 @@ public class LoginWindow extends JFrame {
         card.add(Box.createVerticalStrut(24));
         card.add(loginBtn);
 
-        // ?? Wrap card in a padded container ???????????????????????????????????
         JPanel center = new JPanel(new GridBagLayout());
         center.setBackground(UIConstants.BACKGROUND_COLOR);
         center.setBorder(BorderFactory.createEmptyBorder(24, 24, 24, 24));
         center.add(card);
         root.add(center, BorderLayout.CENTER);
 
-        // ?? Footer ????????????????????????????????????????????????????????????
         JLabel footer = new JLabel("? 2024 Help Desk System. All rights reserved.", SwingConstants.CENTER);
         footer.setFont(UIConstants.FONT_SMALL);
         footer.setForeground(UIConstants.TEXT_SECONDARY);
         footer.setBorder(BorderFactory.createEmptyBorder(0, 0, 14, 0));
         root.add(footer, BorderLayout.SOUTH);
     }
-
-    // ?? Validation & Auth ?????????????????????????????????????????????????????
 
     private void handleLogin() {
         String email    = emailField.getText().trim();
@@ -200,36 +185,47 @@ public class LoginWindow extends JFrame {
 
         if (!valid) return;
 
-        try {
-            User user = authService.authenticate(email, password);
-            openDashboard(user);
-        } catch (IllegalArgumentException ex) {
-            // Red-tinted error dialog
-            UIManager.put("OptionPane.background",        new Color(254, 242, 242));
-            UIManager.put("Panel.background",             new Color(254, 242, 242));
-            UIManager.put("OptionPane.messageForeground", UIConstants.ERROR_COLOR);
-            JOptionPane.showMessageDialog(
-                    this,
-                    ex.getMessage(),
-                    "Login Failed",
-                    JOptionPane.ERROR_MESSAGE
-            );
-            // Reset UI manager to defaults
-            UIManager.put("OptionPane.background",        null);
-            UIManager.put("Panel.background",             null);
-            UIManager.put("OptionPane.messageForeground", null);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "An unexpected error occurred: " + ex.getMessage(),
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE
-            );
-        }
+        loginBtn.setEnabled(false);
+        loginBtn.setText("Signing in...");
+
+        SwingWorker<User, Void> worker = new SwingWorker<>() {
+            @Override
+            protected User doInBackground() {
+                return authService.authenticate(email, password);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    User user = get();
+                    openDashboard(user);
+                } catch (Exception ex) {
+                    loginBtn.setEnabled(true);
+                    loginBtn.setText("Login");
+
+                    Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    String msg = cause.getMessage() != null ? cause.getMessage() : "Invalid credentials";
+
+                    UIManager.put("OptionPane.background",        new Color(254, 242, 242));
+                    UIManager.put("Panel.background",             new Color(254, 242, 242));
+                    UIManager.put("OptionPane.messageForeground", UIConstants.ERROR_COLOR);
+                    JOptionPane.showMessageDialog(
+                            LoginWindow.this,
+                            msg,
+                            "Login Failed",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    UIManager.put("OptionPane.background",        null);
+                    UIManager.put("Panel.background",             null);
+                    UIManager.put("OptionPane.messageForeground", null);
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void openDashboard(User user) {
-        dispose(); // close login window
+        dispose();
         SwingUtilities.invokeLater(() -> {
             switch (user.getRole()) {
                 case "ADMIN" -> {
@@ -240,15 +236,13 @@ public class LoginWindow extends JFrame {
                     AgentDashboard agent = new AgentDashboard(user);
                     agent.setVisible(true);
                 }
-                default -> {  // USER
+                default -> {
                     UserDashboard userDash = new UserDashboard(user);
                     userDash.setVisible(true);
                 }
             }
         });
     }
-
-    // ?? Helpers ???????????????????????????????????????????????????????????????
 
     private static void styleTextField(JComponent field) {
         field.setFont(UIConstants.FONT_BODY);
@@ -270,8 +264,6 @@ public class LoginWindow extends JFrame {
         lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
         return lbl;
     }
-
-    // ?? Inner: subtle drop-shadow border ?????????????????????????????????????
 
     private static class DropShadowBorder extends AbstractBorder {
         private static final int SHADOW = 4;

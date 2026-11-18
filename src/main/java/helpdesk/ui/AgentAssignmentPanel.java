@@ -14,6 +14,7 @@ import java.util.List;
 
 /**
  * Admin Ticket Assignment & Dispatch Module (Task 07).
+ * Fast asynchronous data loading.
  */
 public class AgentAssignmentPanel extends JPanel {
 
@@ -34,8 +35,6 @@ public class AgentAssignmentPanel extends JPanel {
         this.ticketService = new TicketService();
         this.agentService = new AgentService();
         initUI();
-        loadTickets();
-        loadAgents();
     }
 
     private void initUI() {
@@ -173,28 +172,54 @@ public class AgentAssignmentPanel extends JPanel {
     }
 
     public void loadTickets() {
-        tableModel.setRowCount(0);
-        List<Ticket> tickets = ticketService.getAllTickets();
-        for (Ticket t : tickets) {
-            String agentDisplay = t.getAgentId() != null ? "Agent #" + t.getAgentId() : "Unassigned";
-            tableModel.addRow(new Object[]{
-                    t.getTicketId(),
-                    t.getTitle(),
-                    t.getCategory(),
-                    t.getPriority(),
-                    t.getStatus(),
-                    agentDisplay
-            });
-        }
+        SwingWorker<List<Ticket>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Ticket> doInBackground() {
+                return ticketService.getAllTickets();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Ticket> tickets = get();
+                    tableModel.setRowCount(0);
+                    for (Ticket t : tickets) {
+                        String agentDisplay = t.getAgentId() != null ? "Agent #" + t.getAgentId() : "Unassigned";
+                        tableModel.addRow(new Object[]{
+                                t.getTicketId(),
+                                t.getTitle(),
+                                t.getCategory(),
+                                t.getPriority(),
+                                t.getStatus(),
+                                agentDisplay
+                        });
+                    }
+                } catch (Exception ignored) {}
+            }
+        };
+        worker.execute();
     }
 
     public void loadAgents() {
-        agentCombo.removeAllItems();
-        List<Agent> agents = agentService.getAllAgents();
-        for (Agent a : agents) {
-            agentCombo.addItem(new AgentItem(a));
-        }
-        updateAgentWorkloadDisplay();
+        SwingWorker<List<Agent>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Agent> doInBackground() {
+                return agentService.getAllAgents();
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Agent> agents = get();
+                    agentCombo.removeAllItems();
+                    for (Agent a : agents) {
+                        agentCombo.addItem(new AgentItem(a));
+                    }
+                    updateAgentWorkloadDisplay();
+                } catch (Exception ignored) {}
+            }
+        };
+        worker.execute();
     }
 
     private void onTicketSelected() {
@@ -218,17 +243,32 @@ public class AgentAssignmentPanel extends JPanel {
         AgentItem item = (AgentItem) agentCombo.getSelectedItem();
         if (item != null) {
             Agent agent = item.getAgent();
-            int workload = agentService.getAgentWorkload(agent.getAgentId());
-            workloadLabel.setText("Current Active Workload: " + workload + " ticket(s)");
-            if (agent.isAvailable()) {
-                availabilityLabel.setText("? Available for assignment");
-                availabilityLabel.setForeground(UIConstants.SUCCESS_COLOR);
-                if (currentSelectedTicketId != null) assignButton.setEnabled(true);
-            } else {
-                availabilityLabel.setText("? Unavailable (Offline / On Leave)");
-                availabilityLabel.setForeground(UIConstants.ERROR_COLOR);
-                assignButton.setEnabled(false);
-            }
+            workloadLabel.setText("Loading workload...");
+
+            SwingWorker<Integer, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Integer doInBackground() {
+                    return agentService.getAgentWorkload(agent.getAgentId());
+                }
+
+                @Override
+                protected void done() {
+                    try {
+                        int workload = get();
+                        workloadLabel.setText("Current Active Workload: " + workload + " ticket(s)");
+                        if (agent.isAvailable()) {
+                            availabilityLabel.setText("? Available for assignment");
+                            availabilityLabel.setForeground(UIConstants.SUCCESS_COLOR);
+                            if (currentSelectedTicketId != null) assignButton.setEnabled(true);
+                        } else {
+                            availabilityLabel.setText("? Unavailable (Offline / On Leave)");
+                            availabilityLabel.setForeground(UIConstants.ERROR_COLOR);
+                            assignButton.setEnabled(false);
+                        }
+                    } catch (Exception ignored) {}
+                }
+            };
+            worker.execute();
         } else {
             workloadLabel.setText("Current Active Workload: -");
             availabilityLabel.setText("Status: -");
@@ -265,23 +305,38 @@ public class AgentAssignmentPanel extends JPanel {
         );
 
         if (confirm == JOptionPane.YES_OPTION) {
-            try {
-                Ticket ticket = ticketService.getTicketById(currentSelectedTicketId);
-                agentService.assignTicketToAgent(agent, ticket);
+            assignButton.setEnabled(false);
+            assignButton.setText("Assigning...");
 
-                JOptionPane.showMessageDialog(this,
-                        "Ticket #" + currentSelectedTicketId + " assigned successfully to " + agent.getName() + "!",
-                        "Assignment Success",
-                        JOptionPane.INFORMATION_MESSAGE);
+            SwingWorker<Void, Void> worker = new SwingWorker<>() {
+                @Override
+                protected Void doInBackground() {
+                    Ticket ticket = ticketService.getTicketById(currentSelectedTicketId);
+                    agentService.assignTicketToAgent(agent, ticket);
+                    return null;
+                }
 
-                loadTickets();
-                updateAgentWorkloadDisplay();
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this,
-                        "Assignment failed: " + ex.getMessage(),
-                        "Error",
-                        JOptionPane.ERROR_MESSAGE);
-            }
+                @Override
+                protected void done() {
+                    assignButton.setEnabled(true);
+                    assignButton.setText("Assign Ticket");
+                    try {
+                        get();
+                        JOptionPane.showMessageDialog(AgentAssignmentPanel.this,
+                                "Ticket #" + currentSelectedTicketId + " assigned successfully to " + agent.getName() + "!",
+                                "Assignment Success",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        loadTickets();
+                        updateAgentWorkloadDisplay();
+                    } catch (Exception ex) {
+                        JOptionPane.showMessageDialog(AgentAssignmentPanel.this,
+                                "Assignment failed: " + ex.getMessage(),
+                                "Error",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                }
+            };
+            worker.execute();
         }
     }
 

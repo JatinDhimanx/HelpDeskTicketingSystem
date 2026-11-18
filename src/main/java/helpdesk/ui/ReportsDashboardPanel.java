@@ -14,6 +14,7 @@ import java.util.Map;
 
 /**
  * Resolution Reports & Analytics Dashboard (Task 10).
+ * Runs aggregate queries asynchronously in background to ensure 60fps responsive UI.
  */
 public class ReportsDashboardPanel extends JPanel {
 
@@ -36,7 +37,6 @@ public class ReportsDashboardPanel extends JPanel {
     public ReportsDashboardPanel() {
         this.reportService = new ReportService();
         initUI();
-        refreshAllReports();
     }
 
     private void initUI() {
@@ -76,11 +76,11 @@ public class ReportsDashboardPanel extends JPanel {
         JPanel cardsRow = new JPanel(new GridLayout(1, 5, 12, 0));
         cardsRow.setOpaque(false);
 
-        totalCard = new StatCard("Total Tickets", "0", UIConstants.PRIMARY_COLOR);
-        openCard = new StatCard("Open Tickets", "0", UIConstants.PRIORITY_MEDIUM);
-        assignedCard = new StatCard("Assigned", "0", new Color(14, 165, 233));
-        inProgressCard = new StatCard("In Progress", "0", UIConstants.PRIORITY_HIGH);
-        resolvedCard = new StatCard("Resolved", "0", UIConstants.SUCCESS_COLOR);
+        totalCard = new StatCard("Total Tickets", "...", UIConstants.PRIMARY_COLOR);
+        openCard = new StatCard("Open Tickets", "...", UIConstants.PRIORITY_MEDIUM);
+        assignedCard = new StatCard("Assigned", "...", new Color(14, 165, 233));
+        inProgressCard = new StatCard("In Progress", "...", UIConstants.PRIORITY_HIGH);
+        resolvedCard = new StatCard("Resolved", "...", UIConstants.SUCCESS_COLOR);
 
         cardsRow.add(totalCard);
         cardsRow.add(openCard);
@@ -175,66 +175,95 @@ public class ReportsDashboardPanel extends JPanel {
     }
 
     public void refreshAllReports() {
-        int total = reportService.getTotalTicketCount();
-        int open = reportService.getTicketCountByStatus("OPEN");
-        int assigned = reportService.getTicketCountByStatus("ASSIGNED");
-        int inProgress = reportService.getTicketCountByStatus("IN_PROGRESS");
-        int resolved = reportService.getTicketCountByStatus("RESOLVED");
+        avgResolutionLabel.setText("? Loading live report metrics...");
 
-        totalCard.setValue(String.valueOf(total));
-        openCard.setValue(String.valueOf(open));
-        assignedCard.setValue(String.valueOf(assigned));
-        inProgressCard.setValue(String.valueOf(inProgress));
-        resolvedCard.setValue(String.valueOf(resolved));
+        SwingWorker<ReportData, Void> worker = new SwingWorker<>() {
+            @Override
+            protected ReportData doInBackground() {
+                Map<String, Integer> statusCounts = reportService.getStatusCounts();
+                double avgHours = reportService.getAverageResolutionTimeHours();
+                Map<String, Integer> catMap = reportService.getTicketsByCategory();
+                Map<String, Integer> priMap = reportService.getTicketsByPriority();
+                List<ReportService.AgentResolvedStats> agentStats = reportService.getAgentResolvedCounts();
+                List<Ticket> pending = reportService.getPendingTickets();
+                return new ReportData(statusCounts, avgHours, catMap, priMap, agentStats, pending);
+            }
 
-        double avgHours = reportService.getAverageResolutionTimeHours();
-        avgResolutionLabel.setText("? Average Resolution Time: " + avgHours + " hours (" + Math.round(avgHours / 24.0 * 10.0) / 10.0 + " days)");
+            @Override
+            protected void done() {
+                try {
+                    ReportData data = get();
 
-        categoryTableModel.setRowCount(0);
-        Map<String, Integer> catMap = reportService.getTicketsByCategory();
-        for (Map.Entry<String, Integer> e : catMap.entrySet()) {
-            double pct = total > 0 ? (e.getValue() * 100.0 / total) : 0.0;
-            categoryTableModel.addRow(new Object[]{
-                    e.getKey(),
-                    e.getValue(),
-                    String.format("%.1f %%", pct)
-            });
-        }
+                    int open = data.statusCounts.getOrDefault("OPEN", 0);
+                    int assigned = data.statusCounts.getOrDefault("ASSIGNED", 0);
+                    int inProgress = data.statusCounts.getOrDefault("IN_PROGRESS", 0);
+                    int resolved = data.statusCounts.getOrDefault("RESOLVED", 0);
+                    int total = open + assigned + inProgress + resolved;
 
-        priorityTableModel.setRowCount(0);
-        Map<String, Integer> priMap = reportService.getTicketsByPriority();
-        for (Map.Entry<String, Integer> e : priMap.entrySet()) {
-            double pct = total > 0 ? (e.getValue() * 100.0 / total) : 0.0;
-            priorityTableModel.addRow(new Object[]{
-                    e.getKey(),
-                    e.getValue(),
-                    String.format("%.1f %%", pct)
-            });
-        }
+                    totalCard.setValue(String.valueOf(total));
+                    openCard.setValue(String.valueOf(open));
+                    assignedCard.setValue(String.valueOf(assigned));
+                    inProgressCard.setValue(String.valueOf(inProgress));
+                    resolvedCard.setValue(String.valueOf(resolved));
 
-        agentTableModel.setRowCount(0);
-        List<ReportService.AgentResolvedStats> agentStats = reportService.getAgentResolvedCounts();
-        for (ReportService.AgentResolvedStats s : agentStats) {
-            agentTableModel.addRow(new Object[]{
-                    "#" + s.getAgentId(),
-                    s.getName(),
-                    s.getEmail(),
-                    s.getResolvedCount() + " closed"
-            });
-        }
+                    avgResolutionLabel.setText("? Average Resolution Time: " + data.avgHours + " hours (" + Math.round(data.avgHours / 24.0 * 10.0) / 10.0 + " days)");
 
-        pendingTableModel.setRowCount(0);
-        List<Ticket> pending = reportService.getPendingTickets();
-        for (Ticket t : pending) {
-            pendingTableModel.addRow(new Object[]{
-                    t.getTicketId(),
-                    t.getTitle(),
-                    t.getCategory(),
-                    t.getPriority(),
-                    t.getStatus(),
-                    t.getAgentId() != null ? "#" + t.getAgentId() : "Unassigned",
-                    t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
-            });
+                    categoryTableModel.setRowCount(0);
+                    for (Map.Entry<String, Integer> e : data.catMap.entrySet()) {
+                        double pct = total > 0 ? (e.getValue() * 100.0 / total) : 0.0;
+                        categoryTableModel.addRow(new Object[]{
+                                e.getKey(), e.getValue(), String.format("%.1f %%", pct)
+                        });
+                    }
+
+                    priorityTableModel.setRowCount(0);
+                    for (Map.Entry<String, Integer> e : data.priMap.entrySet()) {
+                        double pct = total > 0 ? (e.getValue() * 100.0 / total) : 0.0;
+                        priorityTableModel.addRow(new Object[]{
+                                e.getKey(), e.getValue(), String.format("%.1f %%", pct)
+                        });
+                    }
+
+                    agentTableModel.setRowCount(0);
+                    for (ReportService.AgentResolvedStats s : data.agentStats) {
+                        agentTableModel.addRow(new Object[]{
+                                "#" + s.getAgentId(), s.getName(), s.getEmail(), s.getResolvedCount() + " closed"
+                        });
+                    }
+
+                    pendingTableModel.setRowCount(0);
+                    for (Ticket t : data.pending) {
+                        pendingTableModel.addRow(new Object[]{
+                                t.getTicketId(), t.getTitle(), t.getCategory(), t.getPriority(), t.getStatus(),
+                                t.getAgentId() != null ? "#" + t.getAgentId() : "Unassigned",
+                                t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
+                        });
+                    }
+                } catch (Exception ex) {
+                    avgResolutionLabel.setText("Failed to load reports: " + ex.getMessage());
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private static class ReportData {
+        final Map<String, Integer> statusCounts;
+        final double avgHours;
+        final Map<String, Integer> catMap;
+        final Map<String, Integer> priMap;
+        final List<ReportService.AgentResolvedStats> agentStats;
+        final List<Ticket> pending;
+
+        ReportData(Map<String, Integer> statusCounts, double avgHours,
+                   Map<String, Integer> catMap, Map<String, Integer> priMap,
+                   List<ReportService.AgentResolvedStats> agentStats, List<Ticket> pending) {
+            this.statusCounts = statusCounts;
+            this.avgHours = avgHours;
+            this.catMap = catMap;
+            this.priMap = priMap;
+            this.agentStats = agentStats;
+            this.pending = pending;
         }
     }
 }

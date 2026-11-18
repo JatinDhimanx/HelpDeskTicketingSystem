@@ -13,10 +13,26 @@ import java.util.*;
 
 /**
  * Service providing database aggregate metrics and report queries (Task 10).
+ * Highly optimized with grouped queries to minimize network roundtrips.
  */
 public class ReportService {
 
     private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
+
+    public Map<String, Integer> getStatusCounts() {
+        Map<String, Integer> map = new HashMap<>();
+        String sql = "SELECT status, COUNT(*) as cnt FROM tickets GROUP BY status";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                map.put(rs.getString("status").toUpperCase(), rs.getInt("cnt"));
+            }
+        } catch (SQLException e) {
+            logger.error("getStatusCounts failed: {}", e.getMessage());
+        }
+        return map;
+    }
 
     public int getTotalTicketCount() {
         return getCount("SELECT COUNT(*) FROM tickets");

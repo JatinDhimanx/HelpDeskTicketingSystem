@@ -14,6 +14,7 @@ import java.util.List;
 
 /**
  * Filterable and searchable ticket table panel (Task 06).
+ * Asynchronous data retrieval ensures instant UI responsiveness.
  */
 public class TicketTablePanel extends JPanel {
 
@@ -116,7 +117,7 @@ public class TicketTablePanel extends JPanel {
 
         JPanel footerPanel = new JPanel(new BorderLayout());
         footerPanel.setOpaque(false);
-        countLabel = new JLabel("Showing 0 tickets");
+        countLabel = new JLabel("Loading tickets...");
         countLabel.setFont(UIConstants.FONT_SMALL);
         countLabel.setForeground(UIConstants.TEXT_SECONDARY);
         footerPanel.add(countLabel, BorderLayout.WEST);
@@ -141,23 +142,37 @@ public class TicketTablePanel extends JPanel {
         String statParam = "All".equalsIgnoreCase(stat) ? null : stat;
         String searchParam = search.isEmpty() ? null : search;
 
-        List<Ticket> filtered;
-        if (showAllTickets) {
-            filtered = ticketService.getFilteredTickets(catParam, priParam, statParam, searchParam);
-        } else {
-            List<Ticket> userTickets = ticketService.getTicketsForUser(currentUser.getUserId());
-            filtered = userTickets.stream()
-                    .filter(t -> catParam == null || catParam.equalsIgnoreCase(t.getCategory()))
-                    .filter(t -> priParam == null || priParam.equalsIgnoreCase(t.getPriority()))
-                    .filter(t -> statParam == null || statParam.equalsIgnoreCase(t.getStatus()))
-                    .filter(t -> searchParam == null ||
-                            String.valueOf(t.getTicketId()).contains(searchParam) ||
-                            (t.getTitle() != null && t.getTitle().toLowerCase().contains(searchParam.toLowerCase())) ||
-                            (t.getDescription() != null && t.getDescription().toLowerCase().contains(searchParam.toLowerCase())))
-                    .toList();
-        }
+        countLabel.setText("Applying filters...");
 
-        populateTable(filtered);
+        SwingWorker<List<Ticket>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Ticket> doInBackground() {
+                if (showAllTickets) {
+                    return ticketService.getFilteredTickets(catParam, priParam, statParam, searchParam);
+                } else {
+                    List<Ticket> userTickets = ticketService.getTicketsForUser(currentUser.getUserId());
+                    return userTickets.stream()
+                            .filter(t -> catParam == null || catParam.equalsIgnoreCase(t.getCategory()))
+                            .filter(t -> priParam == null || priParam.equalsIgnoreCase(t.getPriority()))
+                            .filter(t -> statParam == null || statParam.equalsIgnoreCase(t.getStatus()))
+                            .filter(t -> searchParam == null ||
+                                    String.valueOf(t.getTicketId()).contains(searchParam) ||
+                                    (t.getTitle() != null && t.getTitle().toLowerCase().contains(searchParam.toLowerCase())) ||
+                                    (t.getDescription() != null && t.getDescription().toLowerCase().contains(searchParam.toLowerCase())))
+                            .toList();
+                }
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    populateTable(get());
+                } catch (Exception ex) {
+                    countLabel.setText("Failed to apply filters: " + ex.getMessage());
+                }
+            }
+        };
+        worker.execute();
     }
 
     public void resetFilters() {
@@ -169,10 +184,25 @@ public class TicketTablePanel extends JPanel {
     }
 
     public void refreshTickets() {
-        List<Ticket> tickets = showAllTickets
-                ? ticketService.getAllTickets()
-                : ticketService.getTicketsForUser(currentUser.getUserId());
-        populateTable(tickets);
+        countLabel.setText("Loading tickets from database...");
+        SwingWorker<List<Ticket>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Ticket> doInBackground() {
+                return showAllTickets
+                        ? ticketService.getAllTickets()
+                        : ticketService.getTicketsForUser(currentUser.getUserId());
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    populateTable(get());
+                } catch (Exception ex) {
+                    countLabel.setText("Error loading tickets: " + ex.getMessage());
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void populateTable(List<Ticket> tickets) {
