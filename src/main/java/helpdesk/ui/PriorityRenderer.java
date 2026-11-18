@@ -7,58 +7,71 @@ import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 /**
- * TableCellRenderer displaying ticket priority values with visual badge indicators (Task 06).
+ * Modern pill badge cell renderer for ticket priority values (Task 06 / Task 11).
  */
 public class PriorityRenderer extends DefaultTableCellRenderer {
 
+    private Color badgeBg = new Color(243, 244, 246);
+    private Color badgeFg = new Color(75, 85, 99);
+
     public PriorityRenderer() {
         setHorizontalAlignment(SwingConstants.CENTER);
+        setOpaque(false);
     }
 
     @Override
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus,
                                                    int row, int column) {
-        JLabel label = (JLabel) super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-        label.setOpaque(true);
-        label.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
+        super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
 
-        String priority = value != null ? value.toString() : "";
-        Color fgColor;
-        Color bgColor;
+        String priority = value != null ? value.toString().toUpperCase() : "";
+        setFont(new Font("Segoe UI", Font.BOLD, 11));
 
-        switch (priority.toUpperCase()) {
+        switch (priority) {
             case "CRITICAL" -> {
-                bgColor = new Color(254, 226, 226);
-                fgColor = UIConstants.PRIORITY_CRITICAL;
+                badgeBg = new Color(254, 226, 226); // soft red
+                badgeFg = new Color(185, 28, 28);   // deep red
             }
             case "HIGH" -> {
-                bgColor = new Color(255, 237, 213);
-                fgColor = UIConstants.PRIORITY_HIGH;
+                badgeBg = new Color(255, 237, 213); // soft orange
+                badgeFg = new Color(194, 65, 12);   // deep orange
             }
             case "MEDIUM" -> {
-                bgColor = new Color(254, 243, 199);
-                fgColor = UIConstants.PRIORITY_MEDIUM;
+                badgeBg = new Color(254, 243, 199); // soft amber
+                badgeFg = new Color(180, 83, 9);    // deep amber
             }
             case "LOW" -> {
-                bgColor = new Color(220, 252, 231);
-                fgColor = UIConstants.PRIORITY_LOW;
+                badgeBg = new Color(220, 252, 231); // soft green
+                badgeFg = new Color(21, 128, 61);   // deep green
             }
             default -> {
-                bgColor = Color.WHITE;
-                fgColor = UIConstants.TEXT_PRIMARY;
+                badgeBg = new Color(243, 244, 246);
+                badgeFg = new Color(75, 85, 99);
             }
         }
 
-        if (isSelected) {
-            label.setBackground(table.getSelectionBackground());
-            label.setForeground(table.getSelectionForeground());
-        } else {
-            label.setBackground(bgColor);
-            label.setForeground(fgColor);
-        }
+        setForeground(badgeFg);
+        return this;
+    }
 
-        label.setBorder(BorderFactory.createEmptyBorder(2, 6, 2, 6));
-        return label;
+    @Override
+    protected void paintComponent(Graphics g) {
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        int width = getWidth();
+        int height = getHeight();
+
+        int pillHeight = Math.min(22, Math.max(16, height - 8));
+        int pillWidth = Math.min(width - 10, 88);
+        int x = (width - pillWidth) / 2;
+        int y = (height - pillHeight) / 2;
+
+        g2.setColor(badgeBg);
+        g2.fillRoundRect(x, y, pillWidth, pillHeight, pillHeight, pillHeight);
+
+        g2.dispose();
+        super.paintComponent(g);
     }
 }
