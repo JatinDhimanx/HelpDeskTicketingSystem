@@ -23,7 +23,7 @@ public class DBConnection {
     private static final Logger logger = LoggerFactory.getLogger(DBConnection.class);
     private static DBConnection instance;
 
-    private static final int MAX_POOL_SIZE = 8;
+    private static final int MAX_POOL_SIZE = 3;
     private final BlockingQueue<Connection> connectionPool = new ArrayBlockingQueue<>(MAX_POOL_SIZE);
 
     static {
@@ -35,18 +35,16 @@ public class DBConnection {
     }
 
     private DBConnection() {
-        // Pre-warm the pool with 2 active connections in background to make login instant
+        // Pre-warm the pool with 1 active connection to ensure instant login while respecting cloud quotas
         new Thread(() -> {
             try {
-                for (int i = 0; i < 2; i++) {
-                    Connection conn = createPhysicalConnection();
-                    if (conn != null) {
-                        connectionPool.offer(conn);
-                    }
+                Connection conn = createPhysicalConnection();
+                if (conn != null) {
+                    connectionPool.offer(conn);
                 }
-                logger.info("Pre-warmed database connection pool ready.");
+                logger.info("Pre-warmed database connection ready.");
             } catch (Exception e) {
-                logger.warn("Pool pre-warming exception: {}", e.getMessage());
+                logger.warn("Pool pre-warming notice: {}", e.getMessage());
             }
         }, "DBPoolPrewarmer").start();
     }
