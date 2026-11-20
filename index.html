@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Help Desk Ticketing System - Download & Documentation</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --primary-light: #eff6ff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --border: #e2e8f0;
+      --success: #10b981;
+      --accent: #6366f1;
+      --radius: 12px;
+      --shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    header {
+      padding: 40px 0 20px;
+      text-align: center;
+    }
+
+    .badge-bar {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--primary-light);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      border: 1px solid rgba(37, 99, 235, 0.15);
+    }
+
+    h1 {
+      font-size: clamp(32px, 5vw, 44px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text-main);
+      margin-bottom: 14px;
+      line-height: 1.2;
+    }
+
+    .hero-subtitle {
+      font-size: clamp(16px, 2.5vw, 19px);
+      color: var(--text-muted);
+      max-width: 680px;
+      margin: 0 auto 32px;
+    }
+
+    /* Main Download Card */
+    .hero-card {
+      background: var(--card-bg);
+      border-radius: 20px;
+      padding: 36px 40px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      text-align: center;
+      margin-bottom: 40px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 5px;
+      background: linear-gradient(90deg, #2563eb, #6366f1, #38bdf8);
+    }
+
+    .meta-pills {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .pill {
+      background: #f1f5f9;
+      padding: 6px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .pill.highlight {
+      background: #dcfce7;
+      color: #15803d;
+    }
+
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: var(--primary);
+      color: #ffffff;
+      font-size: 17px;
+      font-weight: 700;
+      padding: 16px 36px;
+      border-radius: 12px;
+      text-decoration: none;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    .download-btn:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.45);
+    }
+
+    .download-note {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    /* Grid Sections */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-main);
+    }
+
+    .card-title .icon {
+      font-size: 20px;
+    }
+
+    /* Terminal code box */
+    .code-box {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 14px 18px;
+      border-radius: 8px;
+      margin: 12px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      overflow-x: auto;
+    }
+
+    .code-box code {
+      color: #38bdf8;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    th, td {
+      padding: 8px 10px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-muted);
+      background: #f8fafc;
+    }
+
+    .role-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .role-admin { background: #fee2e2; color: #b91c1c; }
+    .role-agent { background: #ede9fe; color: #6d28d9; }
+    .role-user { background: #dbeafe; color: #1d4ed8; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+      margin-top: 50px;
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="badge-bar">
+        <span>✨ v1.0.0 Production Release</span>
+      </div>
+      <h1>Help Desk Ticketing System</h1>
+      <p class="hero-subtitle">
+        Enterprise-grade Core Java & Swing desktop client equipped with FlatLaf modern styling, cloud MySQL persistence, and automatic SLA background escalation.
+      </p>
+    </header>
+
+    <!-- Main Download Card -->
+    <div class="hero-card">
+      <div class="meta-pills">
+        <span class="pill highlight">● Ready to Download</span>
+        <span class="pill">📦 File: HelpDeskTicketingSystem.jar</span>
+        <span class="pill">💾 Size: ~3.42 MB</span>
+        <span class="pill">☕ Requires: Java 17+ (JDK / JRE)</span>
+      </div>
+
+      <a href="https://github.com/JatinDhimanx/HelpDeskTicketingSystem/releases/latest/download/HelpDeskTicketingSystem.jar" class="download-btn" id="downloadBtn">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Download Public JAR (v1.0.0)
+      </a>
+
+      <p class="download-note">
+        Direct HTTPS link hosted via GitHub Releases CDN • No login required
+      </p>
+    </div>
+
+    <!-- Instructions & Specs Grid -->
+    <div class="grid">
+      <!-- Card 1: Java Requirements -->
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">☕</span>
+          <h3>Java Requirements</h3>
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 12px;">
+          To run this <code>.jar</code> file on Windows 11, you need <strong>Java 17</strong> or higher installed on your system.
+        </p>
+        <p style="font-size: 13px; margin-bottom: 6px;">Check your installed version:</p>
+        <div class="code-box">
+          <code>java -version</code>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-top: 10px;">
+          Need Java? Download free: <br>
+          👉 <a href="https://adoptium.net/temurin/releases/?version=17" target="_blank" style="color: var(--primary); font-weight: 600;">Eclipse Temurin JRE 17 (Recommended)</a>
+        </p>
+      </div>
+
+      <!-- Card 2: How to Run -->
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">🚀</span>
+          <h3>How to Run on Windows 11</h3>
+        </div>
+        <ol style="font-size: 14px; color: #334155; padding-left: 20px; margin-bottom: 12px;">
+          <li style="margin-bottom: 6px;">Download <code>HelpDeskTicketingSystem.jar</code> using the button above.</li>
+          <li style="margin-bottom: 6px;">Open Command Prompt or PowerShell in your download folder.</li>
+          <li style="margin-bottom: 6px;">Execute the JAR file:</li>
+        </ol>
+        <div class="code-box">
+          <code>java -jar HelpDeskTicketingSystem.jar</code>
+        </div>
+        <p style="font-size: 12px; color: var(--text-muted);">
+          Tip: You can also simply double-click the <code>.jar</code> file if Java file associations are configured.
+        </p>
+      </div>
+
+      <!-- Card 3: Default Credentials -->
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">🔑</span>
+          <h3>Demo Accounts</h3>
+        </div>
+        <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">
+          The system comes pre-seeded with 3 demo accounts. You can also click the <strong>1-Click Demo Buttons</strong> right on the login screen:
+        </p>
+        <table>
+          <thead>
+            <tr>
+              <th>Role</th>
+              <th>Email</th>
+              <th>Password</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="role-badge role-admin">Admin</span></td>
+              <td><code>admin@helpdesk.com</code></td>
+              <td><code>admin123</code></td>
+            </tr>
+            <tr>
+              <td><span class="role-badge role-agent">Agent</span></td>
+              <td><code>agent1@helpdesk.com</code></td>
+              <td><code>admin123</code></td>
+            </tr>
+            <tr>
+              <td><span class="role-badge role-user">User</span></td>
+              <td><code>user1@helpdesk.com</code></td>
+              <td><code>admin123</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Card 4: Key Features -->
+      <div class="card">
+        <div class="card-title">
+          <span class="icon">⚡</span>
+          <h3>Key Features</h3>
+        </div>
+        <ul style="font-size: 13px; color: #334155; padding-left: 18px; line-height: 1.8;">
+          <li><strong>FlatLaf SaaS UI:</strong> Clean modern light theme with custom status & priority pill badges.</li>
+          <li><strong>Cloud MySQL Backend:</strong> Persistent remote storage on Filess.io.</li>
+          <li><strong>Connection Pooling:</strong> Sub-second response times without handshake freezes.</li>
+          <li><strong>Escalation Daemon:</strong> Background daemon automatically escalates tickets exceeding SLA thresholds.</li>
+          <li><strong>Role Dashboards:</strong> Dedicated views for Admin, Agent, and User.</li>
+        </ul>
+      </div>
+    </div>
+
+    <footer>
+      <p>Help Desk Ticketing System v1.0.0 • Hosted on <a href="https://github.com/JatinDhimanx/HelpDeskTicketingSystem" target="_blank">GitHub</a></p>
+    </footer>
+  </div>
+
+</body>
+</html>
