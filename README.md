@@ -1,153 +1,171 @@
-﻿# Group 10 – Help Desk Ticketing System
+# Help Desk Ticketing System
 
-A full-featured desktop Help Desk Ticketing System engineered in **Java (Swing GUI)** with **MySQL** via **JDBC**, structured under clean **MVC / OOP principles**, and packaged as both an **executable fat JAR** and a **native Windows application (`HelpDesk.exe`)**.
+A desktop help desk application for submitting, assigning, tracking, escalating, and resolving support tickets. The application is built with **Java 17**, **Swing**, **MySQL**, and **JDBC**, with role-based workflows for administrators, support agents, and end users.
 
----
+## Features
 
-## Architecture & Design Patterns
+- Secure login with BCrypt password hashing
+- Role-based dashboards for administrators, agents, and users
+- Ticket creation with category, priority, and status tracking
+- Ticket assignment with agent availability and workload visibility
+- Ticket notes and resolution remarks for support collaboration
+- Automatic ticket escalation based on configurable age thresholds
+- Reporting dashboards with ticket totals, status metrics, resolution times, and agent performance
+- Prepared SQL statements and repository-based data access
+- Fat JAR packaging through Maven or Gradle
+- GitHub Actions workflow for building and publishing tagged releases
 
-The project enforces strict modularity and separation of concerns:
+## Technology Stack
 
-```
-HelpDeskTicketingSystem/
+| Area | Technology |
+| --- | --- |
+| Language | Java 17 |
+| User interface | Java Swing with FlatLaf |
+| Database | MySQL 8+ |
+| Data access | JDBC |
+| Build tools | Maven and Gradle |
+| Authentication | BCrypt |
+| Logging | SLF4J Simple |
+
+## Application Roles
+
+| Role | Capabilities |
+| --- | --- |
+| **Administrator** | Manage tickets, assign agents, monitor workloads, and view reports |
+| **Agent** | View assigned tickets, update statuses, add notes, and resolve requests |
+| **User** | Create tickets, monitor progress, and read agent responses |
+
+## Project Structure
+
+```text
+.
 ├── src/main/java/helpdesk/
-│   ├── core/           # Main entry point, AppConfig, EscalationManager
-│   ├── database/       # DBConnection singleton, JDBC Connection pooling
-│   ├── models/         # Person (base), User, Agent, Ticket, TicketNote, Assignable (interface)
-│   ├── repositories/   # UserRepository, TicketRepository, AgentRepository (PreparedStatement CRUD)
-│   ├── services/       # AuthService (BCrypt), TicketService, AgentService, ReportService, TicketEscalationService
-│   ├── exceptions/     # TicketNotFoundException
-│   ├── ui/             # Swing GUI (LoginWindow, Dashboards, Panels, PriorityRenderer, StatCards)
-│   └── utils/          # UIConstants (design system tokens), UIHelper
+│   ├── core/          # Application entry point and escalation management
+│   ├── database/      # JDBC connection management
+│   ├── exceptions/    # Application-specific exceptions
+│   ├── models/        # Domain models and interfaces
+│   ├── repositories/  # Database CRUD operations
+│   ├── services/      # Authentication, ticket, agent, and report logic
+│   ├── ui/            # Swing windows, dashboards, and reusable components
+│   └── utils/         # UI constants and helper utilities
 ├── src/main/resources/
-│   ├── helpdesk.properties  # External configuration template
-│   ├── schema.sql           # Database DDL with tables & seed records
-│   └── app_icon.ico         # Application icon
-├── target/
-│   ├── dist/
-│   │   ├── HelpDeskTicketingSystem.jar  # Standalone executable Fat JAR
-│   │   └── HelpDeskApp/                 # Self-contained native Windows app (HelpDesk.exe)
-└── pom.xml                  # Maven dependency descriptor
+│   ├── helpdesk.properties  # Database and application configuration
+│   └── schema.sql            # Database schema and seed data
+├── pom.xml
+├── build.gradle
+└── run.bat
 ```
 
-### Core OOP Principles Applied:
-1. **Inheritance & Abstraction**:
-   - `Person` is an abstract base class containing common attributes (`name`, `email`).
-   - `User` extends `Person` with authentication details (`userId`, `passwordHash`, `role`).
-   - `Agent` extends `Person` and implements the `Assignable` interface.
-2. **Polymorphic Ticket Assignment**:
-   - `Assignable` interface defines `void assignTicket(Ticket ticket)`.
-   - `Agent` implements `assignTicket(Ticket ticket)` by binding its `agentId` to the ticket.
-3. **Encapsulation**:
-   - All model fields are private/protected with full getters, setters, and constructors.
-4. **Security & Data Integrity**:
-   - Passwords stored and authenticated using **BCrypt** hashing (`org.mindrot.jbcrypt`).
-   - All SQL queries use `PreparedStatement` with parameterized inputs (SQL injection proof).
-   - Strict `try-with-resources` throughout for deterministic connection closing.
+## Prerequisites
 
----
+- Java Development Kit (JDK) 17 or newer
+- MySQL 8 or a compatible MySQL database
+- Maven 3.8+ or Gradle 8+
+- A database user with permission to create and modify the application schema
 
-## Database Schema (MySQL)
+## Database Setup
 
-The system operates on 4 normalized relational tables in MySQL:
+1. Create a database in MySQL.
+2. Execute [`src/main/resources/schema.sql`](src/main/resources/schema.sql) against that database.
+3. Configure the connection before starting the application.
 
-1. **`users`**: `user_id` (PK), `name`, `email` (UNIQUE), `password_hash`, `role` (`ADMIN`, `AGENT`, `USER`), `created_at`.
-2. **`agents`**: `agent_id` (PK), `user_id` (FK to `users`), `available` (`BOOLEAN`).
-3. **`tickets`**: `ticket_id` (PK), `user_id` (FK to `users`), `agent_id` (FK to `agents`, NULLABLE), `title`, `description`, `category`, `priority`, `status` (`OPEN`, `ASSIGNED`, `IN_PROGRESS`, `RESOLVED`), `created_at`, `updated_at`, `resolved_at`.
-4. **`ticket_notes`**: `note_id` (PK), `ticket_id` (FK to `tickets`), `agent_id` (FK to `agents`), `note`, `created_at`.
-
-### Default Seed Accounts (Password for all: `admin123`)
-| Role | Email | Password | Access Level |
-|---|---|---|---|
-| **Admin** | `admin@helpdesk.com` | `admin123` | Full control: tickets, agent dispatch, aggregate reports |
-| **Agent 1** | `agent1@helpdesk.com` | `admin123` | Agent workspace: assigned tickets, status lifecycle, notes |
-| **Agent 2** | `agent2@helpdesk.com` | `admin123` | Agent workspace: assigned tickets, status lifecycle, notes |
-| **User 1** | `user1@helpdesk.com` | `admin123` | User portal: submit tickets, track status, view agent replies |
-| **User 2** | `user2@helpdesk.com` | `admin123` | User portal: submit tickets, track status, view agent replies |
-
----
-
-## Configuration (`helpdesk.properties`)
-
-The application supports zero-recompile external configuration. You can configure database credentials via:
-1. `src/main/resources/helpdesk.properties` (bundled default)
-2. An external `helpdesk.properties` in the working directory (takes precedence)
-3. Environment variables (`DB_URL`, `DB_USER`, `DB_PASSWORD`)
+For local development, create an external `helpdesk.properties` file in the project working directory. An external file takes precedence over the bundled resource configuration.
 
 ```properties
-# Cloud MySQL (Filess.io / Remote / Local)
-db.url=jdbc:mysql://k5v6gm.h.filess.io:61001/helpdesk_dutyshopso?useSSL=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
-db.user=helpdesk_dutyshopso
-db.password=YOUR_PASSWORD_HERE
+db.url=jdbc:mysql://localhost:3306/helpdesk?useSSL=false&serverTimezone=UTC
+db.user=YOUR_DATABASE_USER
+db.password=YOUR_DATABASE_PASSWORD
 escalation.check.interval.minutes=30
 ```
 
----
+Do not commit real database passwords or other secrets. Use environment-specific configuration and replace any credentials that may have been exposed in a shared repository.
 
-## Key Modules & Features
+## Build and Run
 
-### 1. Authentication & Role-Based Routing (Task 04)
-- Modern light-theme card login with password visibility toggle.
-- Validates credentials against BCrypt hashes in MySQL.
-- Routes users automatically to their designated dashboard:
-  - **`AdminDashboard`** for `ADMIN`
-  - **`AgentDashboard`** for `AGENT`
-  - **`UserDashboard`** for `USER`
+### Maven
 
-### 2. Ticket Creation & Classification (Tasks 05 & 06)
-- Categories: `Technical`, `Network`, `Hardware`, `Software`, `Account/Login`.
-- Priorities: `Low`, `Medium`, `High`, `Critical`.
-- Visual color badges in tables for fast priority scanning.
-- Dynamic filtering by Category, Priority, Status, and Search keywords (Title or Ticket ID).
+Build the application and its dependency-inclusive JAR:
 
-### 3. Agent Assignment & Workload Tracking (Task 07)
-- Admin interface showing tickets side-by-side with agent availability and workload counts.
-- Enforces availability check: unavailable agents cannot receive ticket assignments.
-- Dispatches tickets polymorphically using the `Assignable` interface.
-
-### 4. Ticket Status Lifecycle (Task 08)
-- Lifecycle: `OPEN` ➔ `ASSIGNED` ➔ `IN_PROGRESS` ➔ `RESOLVED`.
-- Agents review full issue descriptions, update statuses, and log resolution audit notes.
-- Quick Resolve feature timestamps `resolved_at` and captures closing remarks.
-- Users track ticket progression and review responses in real-time.
-
-### 5. Multithreaded Ticket Escalation Daemon (Task 09)
-- `TicketEscalationService` runs on a background daemon thread (`TicketEscalationWorker`) independent of the Swing EDT.
-- Periodically checks unresolved tickets against configurable age thresholds:
-  - `Low` ➔ `Medium` after 72 hours
-  - `Medium` ➔ `High` after 48 hours
-  - `High` ➔ `Critical` after 24 hours
-- Critical tickets are never re-escalated.
-- Cleanly shuts down via JVM shutdown hooks and `EscalationManager.stop()`.
-
-### 6. Resolution Reports & Analytics (Task 10)
-- Real-time aggregate KPI cards: Total, Open, Assigned, In-Progress, Resolved.
-- Average resolution time calculation in hours and days via SQL timestamp diffs.
-- Category breakdown and priority distribution with percentages.
-- Agent performance ranking (resolved ticket counts).
-- Pending ticket priority queue.
-
----
-
-## Execution Instructions
-
-### Option 1: Running the Native Windows App (`HelpDesk.exe`)
-No Java installation required on the client computer:
-1. Navigate to:
-   ```
-   target/dist/HelpDeskApp/
-   ```
-2. Double-click **`HelpDesk.exe`**.
-
-### Option 2: Running the Executable Fat JAR
-Requires Java 17+ installed:
 ```bash
-java -jar target/dist/HelpDeskTicketingSystem.jar
+mvn clean package
+java -jar target/HelpDeskTicketingSystem-1.0-SNAPSHOT-jar-with-dependencies.jar
 ```
 
-### Option 3: Compiling from Source
+### Gradle
+
+Build and run with Gradle:
+
 ```bash
-cd HelpDeskTicketingSystem
-javac -cp "libs/*" -d target/classes @sources.txt
-java -cp "target/classes;libs/*" helpdesk.core.Main
+gradle clean build
+gradle run
 ```
+
+The application entry point is `helpdesk.core.Main`.
+
+### Windows launcher
+
+After building the Maven artifact, `run.bat` can be used to launch the packaged application from Windows. The script expects the executable JAR at:
+
+```text
+target/dist/HelpDeskTicketingSystem.jar
+```
+
+If required, copy or rename the Maven fat JAR to that location before running the script.
+
+## Default Seed Accounts
+
+The schema includes development accounts for testing. The default password is `admin123` for each account.
+
+| Role | Email |
+| --- | --- |
+| Administrator | `admin@helpdesk.com` |
+| Agent | `agent1@helpdesk.com` |
+| Agent | `agent2@helpdesk.com` |
+| User | `user1@helpdesk.com` |
+| User | `user2@helpdesk.com` |
+
+These credentials are intended for local development only. Change or remove seeded passwords before deploying the application in a production environment.
+
+## Ticket Lifecycle and Escalation
+
+Tickets follow this workflow:
+
+```text
+OPEN → ASSIGNED → IN_PROGRESS → RESOLVED
+```
+
+The background escalation worker periodically evaluates unresolved tickets and raises their priority when they exceed the configured age threshold:
+
+- Low → Medium after 72 hours
+- Medium → High after 48 hours
+- High → Critical after 24 hours
+
+The check interval is controlled by `escalation.check.interval.minutes`.
+
+## Releases
+
+Pushing a tag that starts with `v` triggers the GitHub Actions release workflow. The workflow builds the project with JDK 17, packages the dependency-inclusive JAR, and attaches it to a GitHub Release.
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+## Security Notes
+
+- Passwords are stored as BCrypt hashes.
+- SQL operations use parameterized `PreparedStatement` queries.
+- Keep database configuration outside source control whenever possible.
+- Use strong, unique credentials for non-development environments.
+- Review database permissions and enable TLS when connecting to a remote MySQL server.
+
+## Contributing
+
+1. Create a feature branch from `main`.
+2. Make focused changes that follow the existing package and naming conventions.
+3. Build the project locally with `mvn clean package` or `gradle clean build`.
+4. Open a pull request describing the behavior change and validation performed.
+
+## License
+
+No license has currently been specified for this repository. Add a license file before distributing or reusing the project outside its intended development context.
