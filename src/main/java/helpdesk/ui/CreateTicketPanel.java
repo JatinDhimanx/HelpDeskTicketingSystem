@@ -96,6 +96,7 @@ public class CreateTicketPanel extends JPanel {
         });
         categoryCombo.setFont(UIConstants.FONT_BODY);
         categoryCombo.setPreferredSize(new Dimension(240, 36));
+        categoryCombo.setLightWeightPopupEnabled(false);
         catPanel.add(catLabel, BorderLayout.NORTH);
         catPanel.add(categoryCombo, BorderLayout.CENTER);
 
@@ -108,6 +109,7 @@ public class CreateTicketPanel extends JPanel {
         });
         priorityCombo.setFont(UIConstants.FONT_BODY);
         priorityCombo.setPreferredSize(new Dimension(240, 36));
+        priorityCombo.setLightWeightPopupEnabled(false);
         priPanel.add(priLabel, BorderLayout.NORTH);
         priPanel.add(priorityCombo, BorderLayout.CENTER);
 
@@ -157,7 +159,11 @@ public class CreateTicketPanel extends JPanel {
         buttonRow.add(submitBtn);
         formCard.add(buttonRow, gbc);
 
-        add(formCard, BorderLayout.CENTER);
+        JScrollPane scrollPane = new JScrollPane(formCard);
+        scrollPane.setBorder(null);
+        scrollPane.setOpaque(false);
+        scrollPane.getViewport().setOpaque(false);
+        add(scrollPane, BorderLayout.CENTER);
     }
 
     private void handleSubmit() {

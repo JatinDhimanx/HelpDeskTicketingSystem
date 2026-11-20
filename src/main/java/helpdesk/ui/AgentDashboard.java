@@ -38,7 +38,7 @@ public class AgentDashboard extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1140, 720);
-        setMinimumSize(new Dimension(900, 600));
+        setMinimumSize(new Dimension(850, 540));
         setLocationRelativeTo(null);
 
         JPanel root = new JPanel(new BorderLayout());

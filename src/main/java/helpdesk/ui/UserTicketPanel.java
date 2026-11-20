@@ -41,7 +41,7 @@ public class UserTicketPanel extends JPanel {
         setBackground(UIConstants.BACKGROUND_COLOR);
         setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
-        JPanel topPanel = new JPanel(new BorderLayout());
+        JPanel topPanel = new JPanel(new BorderLayout(0, 8));
         topPanel.setOpaque(false);
 
         JPanel titleBox = new JPanel(new BorderLayout(0, 2));
@@ -58,14 +58,20 @@ public class UserTicketPanel extends JPanel {
 
         JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         filterRow.setOpaque(false);
-        filterRow.add(new JLabel("Status:"));
+        JLabel statLbl = new JLabel("Status:");
+        statLbl.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
+        filterRow.add(statLbl);
+
         statusFilter = new JComboBox<>(new String[]{"All", "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED"});
         statusFilter.setFont(UIConstants.FONT_BODY);
+        statusFilter.setPreferredSize(new Dimension(125, 32));
+        statusFilter.setLightWeightPopupEnabled(false);
         statusFilter.addActionListener(e -> loadTickets());
         filterRow.add(statusFilter);
 
         JButton refreshBtn = new JButton("Refresh");
         refreshBtn.setFont(UIConstants.FONT_SMALL);
+        refreshBtn.setPreferredSize(new Dimension(80, 32));
         refreshBtn.addActionListener(e -> loadTickets());
         filterRow.add(refreshBtn);
 
@@ -76,9 +82,12 @@ public class UserTicketPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(520);
         splitPane.setResizeWeight(0.55);
+        splitPane.setContinuousLayout(true);
+        splitPane.setOneTouchExpandable(true);
         splitPane.setBorder(null);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
+        leftPanel.setMinimumSize(new Dimension(300, 200));
         leftPanel.setBackground(UIConstants.CARD_COLOR);
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
@@ -105,6 +114,7 @@ public class UserTicketPanel extends JPanel {
         splitPane.setLeftComponent(leftPanel);
 
         JPanel rightPanel = new JPanel(new BorderLayout(0, 12));
+        rightPanel.setMinimumSize(new Dimension(280, 200));
         rightPanel.setBackground(UIConstants.CARD_COLOR);
         rightPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),

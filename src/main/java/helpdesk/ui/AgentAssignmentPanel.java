@@ -59,9 +59,12 @@ public class AgentAssignmentPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(580);
         splitPane.setResizeWeight(0.65);
+        splitPane.setContinuousLayout(true);
+        splitPane.setOneTouchExpandable(true);
         splitPane.setBorder(null);
 
         JPanel leftPanel = new JPanel(new BorderLayout(0, 8));
+        leftPanel.setMinimumSize(new Dimension(320, 200));
         leftPanel.setBackground(UIConstants.CARD_COLOR);
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
@@ -131,6 +134,7 @@ public class AgentAssignmentPanel extends JPanel {
         agentCombo = new JComboBox<>();
         agentCombo.setFont(UIConstants.FONT_BODY);
         agentCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
+        agentCombo.setLightWeightPopupEnabled(false);
         agentCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
         agentCombo.addActionListener(e -> updateAgentWorkloadDisplay());
 
@@ -168,7 +172,11 @@ public class AgentAssignmentPanel extends JPanel {
         rightPanel.add(assignButton);
         rightPanel.add(Box.createVerticalGlue());
 
-        splitPane.setRightComponent(rightPanel);
+        JScrollPane rightScroll = new JScrollPane(rightPanel);
+        rightScroll.setBorder(null);
+        rightScroll.setOpaque(false);
+        rightScroll.getViewport().setOpaque(false);
+        splitPane.setRightComponent(rightScroll);
         add(splitPane, BorderLayout.CENTER);
     }
 

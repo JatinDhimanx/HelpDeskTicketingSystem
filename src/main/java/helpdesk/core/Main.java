@@ -38,6 +38,10 @@ public class Main {
             UIManager.put("Table.showHorizontalLines", true);
             UIManager.put("Table.showVerticalLines", false);
             UIManager.put("defaultFont", new Font("Segoe UI", Font.PLAIN, 13));
+
+            // Ensure combo box popups and menus are always top-level and never render behind other components
+            JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+            ToolTipManager.sharedInstance().setLightWeightPopupEnabled(false);
         } catch (Throwable t) {
             logger.warn("FlatLaf setup failed, falling back to system Look and Feel: {}", t.getMessage());
             try {

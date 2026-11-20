@@ -29,7 +29,7 @@ public class UserDashboard extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1080, 680);
-        setMinimumSize(new Dimension(850, 550));
+        setMinimumSize(new Dimension(800, 520));
         setLocationRelativeTo(null);
 
         JPanel root = new JPanel(new BorderLayout());

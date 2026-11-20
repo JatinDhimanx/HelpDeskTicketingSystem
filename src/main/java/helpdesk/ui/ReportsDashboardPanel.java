@@ -4,10 +4,13 @@ import helpdesk.models.Ticket;
 import helpdesk.services.ReportService;
 import helpdesk.utils.UIConstants;
 import helpdesk.utils.UIHelper;
+import helpdesk.utils.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +76,7 @@ public class ReportsDashboardPanel extends JPanel {
         JPanel kpiContainer = new JPanel(new BorderLayout(0, 8));
         kpiContainer.setOpaque(false);
 
-        JPanel cardsRow = new JPanel(new GridLayout(1, 5, 12, 0));
+        JPanel cardsRow = new JPanel(new WrapLayout(FlowLayout.CENTER, 12, 10));
         cardsRow.setOpaque(false);
 
         totalCard = new StatCard("Total Tickets", "...", UIConstants.PRIMARY_COLOR);
@@ -88,6 +91,14 @@ public class ReportsDashboardPanel extends JPanel {
         cardsRow.add(inProgressCard);
         cardsRow.add(resolvedCard);
         kpiContainer.add(cardsRow, BorderLayout.CENTER);
+
+        addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                cardsRow.revalidate();
+                cardsRow.repaint();
+            }
+        });
 
         avgResolutionLabel = new JLabel("Average Resolution Time: calculating...", SwingConstants.RIGHT);
         avgResolutionLabel.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD));

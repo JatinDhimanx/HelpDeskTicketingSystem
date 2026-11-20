@@ -8,6 +8,7 @@ import helpdesk.services.AgentService;
 import helpdesk.services.TicketService;
 import helpdesk.utils.UIConstants;
 import helpdesk.utils.UIHelper;
+import helpdesk.utils.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -72,9 +73,12 @@ public class AgentTicketPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(520);
         splitPane.setResizeWeight(0.55);
+        splitPane.setContinuousLayout(true);
+        splitPane.setOneTouchExpandable(true);
         splitPane.setBorder(null);
 
         JPanel leftPanel = new JPanel(new BorderLayout(0, 8));
+        leftPanel.setMinimumSize(new Dimension(300, 200));
         leftPanel.setBackground(UIConstants.CARD_COLOR);
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
@@ -112,6 +116,7 @@ public class AgentTicketPanel extends JPanel {
         splitPane.setLeftComponent(leftPanel);
 
         JPanel rightPanel = new JPanel(new BorderLayout(0, 10));
+        rightPanel.setMinimumSize(new Dimension(300, 200));
         rightPanel.setBackground(UIConstants.CARD_COLOR);
         rightPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
@@ -141,21 +146,27 @@ public class AgentTicketPanel extends JPanel {
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
 
-        JPanel statusActionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
+        JPanel statusActionRow = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 6));
         statusActionRow.setOpaque(false);
         statusActionRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        statusActionRow.add(new JLabel("Update Lifecycle:"));
+        JLabel lifecycleLabel = new JLabel("Update Lifecycle:");
+        lifecycleLabel.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
+        statusActionRow.add(lifecycleLabel);
 
         statusCombo = new JComboBox<>(new String[]{"OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED"});
         statusCombo.setFont(UIConstants.FONT_BODY);
+        statusCombo.setPreferredSize(new Dimension(130, 32));
+        statusCombo.setLightWeightPopupEnabled(false);
         statusActionRow.add(statusCombo);
 
         updateStatusBtn = UIHelper.createStyledButton("Save Status", UIConstants.PRIMARY_COLOR, Color.WHITE);
+        updateStatusBtn.setPreferredSize(new Dimension(100, 32));
         updateStatusBtn.setEnabled(false);
         updateStatusBtn.addActionListener(e -> handleStatusUpdate());
         statusActionRow.add(updateStatusBtn);
 
-        markResolvedBtn = UIHelper.createStyledButton("? Quick Resolve", UIConstants.SUCCESS_COLOR, Color.WHITE);
+        markResolvedBtn = UIHelper.createStyledButton("Quick Resolve", UIConstants.SUCCESS_COLOR, Color.WHITE);
+        markResolvedBtn.setPreferredSize(new Dimension(115, 32));
         markResolvedBtn.setEnabled(false);
         markResolvedBtn.addActionListener(e -> handleQuickResolve());
         statusActionRow.add(markResolvedBtn);
@@ -200,7 +211,11 @@ public class AgentTicketPanel extends JPanel {
         historyScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
         centerPanel.add(historyScroll);
 
-        rightPanel.add(centerPanel, BorderLayout.CENTER);
+        JScrollPane centerScroll = new JScrollPane(centerPanel);
+        centerScroll.setBorder(null);
+        centerScroll.setOpaque(false);
+        centerScroll.getViewport().setOpaque(false);
+        rightPanel.add(centerScroll, BorderLayout.CENTER);
         splitPane.setRightComponent(rightPanel);
         add(splitPane, BorderLayout.CENTER);
     }

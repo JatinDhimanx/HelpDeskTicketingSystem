@@ -34,7 +34,7 @@ public class AdminDashboard extends JFrame {
 
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1200, 760);
-        setMinimumSize(new Dimension(950, 620));
+        setMinimumSize(new Dimension(850, 560));
         setLocationRelativeTo(null);
 
         JPanel root = new JPanel(new BorderLayout());
