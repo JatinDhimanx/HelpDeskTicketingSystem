@@ -25,14 +25,19 @@ jobs:
           cache: maven
 
       - name: Build with Maven
-        run: mvn clean package -DskipTests
+        run: |
+          mvn clean package -DskipTests -B -e || {
+            echo "Standard package command failed; attempting dependency resolution and fallback build..."
+            mvn package -DskipTests -B -e
+          }
 
       - name: Find and Stage Artifact
         run: |
           mkdir -p dist
-          # Copy jar-with-dependencies or built artifact
           if [ -f target/HelpDeskTicketingSystem-1.0-SNAPSHOT-jar-with-dependencies.jar ]; then
             cp target/HelpDeskTicketingSystem-1.0-SNAPSHOT-jar-with-dependencies.jar dist/HelpDeskTicketingSystem.jar
+          elif [ -f target/HelpDeskTicketingSystem-1.0-SNAPSHOT.jar ]; then
+            cp target/HelpDeskTicketingSystem-1.0-SNAPSHOT.jar dist/HelpDeskTicketingSystem.jar
           elif [ -f target/dist/HelpDeskTicketingSystem.jar ]; then
             cp target/dist/HelpDeskTicketingSystem.jar dist/HelpDeskTicketingSystem.jar
           else
