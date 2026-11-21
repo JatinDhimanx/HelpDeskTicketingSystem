@@ -193,7 +193,9 @@ public class AgentAssignmentPanel extends JPanel {
                     List<Ticket> tickets = get();
                     tableModel.setRowCount(0);
                     for (Ticket t : tickets) {
-                        String agentDisplay = t.getAgentId() != null ? "Agent #" + t.getAgentId() : "Unassigned";
+                        String agentDisplay = t.getAgentName() != null && !t.getAgentName().isEmpty()
+                                ? t.getAgentName()
+                                : (t.getAgentId() != null ? "Agent " + t.getAgentId() : "Unassigned");
                         tableModel.addRow(new Object[]{
                                 t.getTicketId(),
                                 t.getTitle(),
@@ -362,8 +364,9 @@ public class AgentAssignmentPanel extends JPanel {
 
         @Override
         public String toString() {
+            String name = agent.getName() != null && !agent.getName().isEmpty() ? agent.getName() : "Agent " + agent.getAgentId();
             String avail = agent.isAvailable() ? "Available" : "Unavailable";
-            return agent.getName() + " (" + agent.getEmail() + ") - [" + avail + "]";
+            return name + " (" + agent.getEmail() + ") - [" + avail + "]";
         }
     }
 }

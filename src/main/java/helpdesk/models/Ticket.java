@@ -18,6 +18,8 @@ public class Ticket {
     private Timestamp createdAt;
     private Timestamp updatedAt;
     private Timestamp resolvedAt;   // nullable
+    private String    agentName;    // joined display name (e.g. "Agent 1")
+    private String    userName;     // joined display name (e.g. "User 1")
 
     /** No-arg constructor */
     public Ticket() {}
@@ -74,6 +76,12 @@ public class Ticket {
 
     public Timestamp getResolvedAt() { return resolvedAt; }
     public void setResolvedAt(Timestamp resolvedAt) { this.resolvedAt = resolvedAt; }
+
+    public String getAgentName() { return agentName; }
+    public void setAgentName(String agentName) { this.agentName = agentName; }
+
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
 
     @Override
     public String toString() {

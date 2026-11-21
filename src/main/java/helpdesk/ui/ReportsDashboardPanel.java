@@ -173,7 +173,7 @@ public class ReportsDashboardPanel extends JPanel {
         panel.setBackground(UIConstants.CARD_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        String[] cols = {"ID", "Title", "Category", "Priority", "Status", "Agent ID", "Age / Created At"};
+        String[] cols = {"ID", "Title", "Category", "Priority", "Status", "Agent", "Age / Created At"};
         pendingTableModel = new DefaultTableModel(cols, 0) {
             @Override public boolean isCellEditable(int r, int c) { return false; }
         };
@@ -192,13 +192,12 @@ public class ReportsDashboardPanel extends JPanel {
         SwingWorker<ReportData, Void> worker = new SwingWorker<>() {
             @Override
             protected ReportData doInBackground() {
-                Map<String, Integer> statusCounts = reportService.getStatusCounts();
-                double avgHours = reportService.getAverageResolutionTimeHours();
+                ReportService.KPIStats kpi = reportService.getKPIStats();
                 Map<String, Integer> catMap = reportService.getTicketsByCategory();
                 Map<String, Integer> priMap = reportService.getTicketsByPriority();
                 List<ReportService.AgentResolvedStats> agentStats = reportService.getAgentResolvedCounts();
                 List<Ticket> pending = reportService.getPendingTickets();
-                return new ReportData(statusCounts, avgHours, catMap, priMap, agentStats, pending);
+                return new ReportData(kpi, catMap, priMap, agentStats, pending);
             }
 
             @Override
@@ -206,19 +205,14 @@ public class ReportsDashboardPanel extends JPanel {
                 try {
                     ReportData data = get();
 
-                    int open = data.statusCounts.getOrDefault("OPEN", 0);
-                    int assigned = data.statusCounts.getOrDefault("ASSIGNED", 0);
-                    int inProgress = data.statusCounts.getOrDefault("IN_PROGRESS", 0);
-                    int resolved = data.statusCounts.getOrDefault("RESOLVED", 0);
-                    int total = open + assigned + inProgress + resolved;
-
+                    int total = data.kpi.total;
                     totalCard.setValue(String.valueOf(total));
-                    openCard.setValue(String.valueOf(open));
-                    assignedCard.setValue(String.valueOf(assigned));
-                    inProgressCard.setValue(String.valueOf(inProgress));
-                    resolvedCard.setValue(String.valueOf(resolved));
+                    openCard.setValue(String.valueOf(data.kpi.open));
+                    assignedCard.setValue(String.valueOf(data.kpi.assigned));
+                    inProgressCard.setValue(String.valueOf(data.kpi.inProgress));
+                    resolvedCard.setValue(String.valueOf(data.kpi.resolved));
 
-                    avgResolutionLabel.setText("Average Resolution Time: " + data.avgHours + " hours (" + Math.round(data.avgHours / 24.0 * 10.0) / 10.0 + " days)");
+                    avgResolutionLabel.setText("Average Resolution Time: " + data.kpi.avgResolutionHours + " hours (" + Math.round(data.kpi.avgResolutionHours / 24.0 * 10.0) / 10.0 + " days)");
 
                     categoryTableModel.setRowCount(0);
                     for (Map.Entry<String, Integer> e : data.catMap.entrySet()) {
@@ -245,9 +239,12 @@ public class ReportsDashboardPanel extends JPanel {
 
                     pendingTableModel.setRowCount(0);
                     for (Ticket t : data.pending) {
+                        String agentName = t.getAgentName() != null && !t.getAgentName().isEmpty()
+                                ? t.getAgentName()
+                                : (t.getAgentId() != null ? "Agent " + t.getAgentId() : "Unassigned");
                         pendingTableModel.addRow(new Object[]{
                                 t.getTicketId(), t.getTitle(), t.getCategory(), t.getPriority(), t.getStatus(),
-                                t.getAgentId() != null ? "#" + t.getAgentId() : "Unassigned",
+                                agentName,
                                 t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
                         });
                     }
@@ -260,18 +257,16 @@ public class ReportsDashboardPanel extends JPanel {
     }
 
     private static class ReportData {
-        final Map<String, Integer> statusCounts;
-        final double avgHours;
+        final ReportService.KPIStats kpi;
         final Map<String, Integer> catMap;
         final Map<String, Integer> priMap;
         final List<ReportService.AgentResolvedStats> agentStats;
         final List<Ticket> pending;
 
-        ReportData(Map<String, Integer> statusCounts, double avgHours,
+        ReportData(ReportService.KPIStats kpi,
                    Map<String, Integer> catMap, Map<String, Integer> priMap,
                    List<ReportService.AgentResolvedStats> agentStats, List<Ticket> pending) {
-            this.statusCounts = statusCounts;
-            this.avgHours = avgHours;
+            this.kpi = kpi;
             this.catMap = catMap;
             this.priMap = priMap;
             this.agentStats = agentStats;

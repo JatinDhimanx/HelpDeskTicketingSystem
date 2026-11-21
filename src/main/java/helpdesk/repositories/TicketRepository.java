@@ -31,11 +31,25 @@ public class TicketRepository {
         t.setCreatedAt(rs.getTimestamp("created_at"));
         t.setUpdatedAt(rs.getTimestamp("updated_at"));
         t.setResolvedAt(rs.getTimestamp("resolved_at"));
+
+        try {
+            t.setAgentName(rs.getString("agent_name"));
+        } catch (SQLException ignored) {}
+        try {
+            t.setUserName(rs.getString("user_name"));
+        } catch (SQLException ignored) {}
         return t;
     }
 
+    private static final String BASE_SELECT = 
+            "SELECT t.*, u_agent.name AS agent_name, u_user.name AS user_name " +
+            "FROM tickets t " +
+            "LEFT JOIN agents a ON t.agent_id = a.agent_id " +
+            "LEFT JOIN users u_agent ON a.user_id = u_agent.user_id " +
+            "LEFT JOIN users u_user ON t.user_id = u_user.user_id";
+
     public Optional<Ticket> findById(int ticketId) {
-        String sql = "SELECT * FROM tickets WHERE ticket_id = ?";
+        String sql = BASE_SELECT + " WHERE t.ticket_id = ?";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticketId);
@@ -50,7 +64,7 @@ public class TicketRepository {
 
     public List<Ticket> findAll() {
         List<Ticket> list = new ArrayList<>();
-        String sql = "SELECT * FROM tickets ORDER BY created_at DESC";
+        String sql = BASE_SELECT + " ORDER BY t.created_at DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -63,7 +77,7 @@ public class TicketRepository {
 
     public List<Ticket> findByUserId(int userId) {
         List<Ticket> list = new ArrayList<>();
-        String sql = "SELECT * FROM tickets WHERE user_id = ? ORDER BY created_at DESC";
+        String sql = BASE_SELECT + " WHERE t.user_id = ? ORDER BY t.created_at DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
@@ -78,7 +92,7 @@ public class TicketRepository {
 
     public List<Ticket> findByAgentId(int agentId) {
         List<Ticket> list = new ArrayList<>();
-        String sql = "SELECT * FROM tickets WHERE agent_id = ? ORDER BY created_at DESC";
+        String sql = BASE_SELECT + " WHERE t.agent_id = ? ORDER BY t.created_at DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, agentId);
@@ -180,28 +194,28 @@ public class TicketRepository {
      */
     public List<Ticket> findByFilters(String category, String priority, String status, String search) {
         List<Ticket> list = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT * FROM tickets WHERE 1=1");
+        StringBuilder sql = new StringBuilder(BASE_SELECT + " WHERE 1=1");
         List<Object> params = new ArrayList<>();
 
         if (category != null && !category.isEmpty()) {
-            sql.append(" AND category = ?");
+            sql.append(" AND t.category = ?");
             params.add(category);
         }
         if (priority != null && !priority.isEmpty()) {
-            sql.append(" AND priority = ?");
+            sql.append(" AND t.priority = ?");
             params.add(priority);
         }
         if (status != null && !status.isEmpty()) {
-            sql.append(" AND status = ?");
+            sql.append(" AND t.status = ?");
             params.add(status);
         }
         if (search != null && !search.isEmpty()) {
-            sql.append(" AND (title LIKE ? OR description LIKE ?)");
+            sql.append(" AND (t.title LIKE ? OR t.description LIKE ?)");
             String like = "%" + search + "%";
             params.add(like);
             params.add(like);
         }
-        sql.append(" ORDER BY created_at DESC");
+        sql.append(" ORDER BY t.created_at DESC");
 
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql.toString())) {
@@ -284,7 +298,7 @@ public class TicketRepository {
 
     public List<Ticket> findUnresolved() {
         List<Ticket> list = new ArrayList<>();
-        String sql = "SELECT * FROM tickets WHERE status != 'RESOLVED' ORDER BY created_at ASC";
+        String sql = BASE_SELECT + " WHERE t.status != 'RESOLVED' ORDER BY t.created_at ASC";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {

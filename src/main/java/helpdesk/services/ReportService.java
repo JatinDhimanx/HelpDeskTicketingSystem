@@ -19,6 +19,48 @@ public class ReportService {
 
     private static final Logger logger = LoggerFactory.getLogger(ReportService.class);
 
+    public static class KPIStats {
+        public int total;
+        public int open;
+        public int assigned;
+        public int inProgress;
+        public int resolved;
+        public double avgResolutionHours;
+    }
+
+    /**
+     * Consolidates status counts, total count, and average resolution time in a SINGLE database roundtrip.
+     * Dramatically accelerates dashboard metrics over remote TLS connections.
+     */
+    public KPIStats getKPIStats() {
+        KPIStats stats = new KPIStats();
+        String sql = "SELECT COUNT(*) AS total, " +
+                     "SUM(CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END) AS open_cnt, " +
+                     "SUM(CASE WHEN status = 'ASSIGNED' THEN 1 ELSE 0 END) AS assigned_cnt, " +
+                     "SUM(CASE WHEN status = 'IN_PROGRESS' THEN 1 ELSE 0 END) AS in_progress_cnt, " +
+                     "SUM(CASE WHEN status = 'RESOLVED' THEN 1 ELSE 0 END) AS resolved_cnt, " +
+                     "AVG(CASE WHEN status = 'RESOLVED' AND resolved_at IS NOT NULL " +
+                     "         THEN TIMESTAMPDIFF(MINUTE, created_at, resolved_at) / 60.0 " +
+                     "         ELSE NULL END) AS avg_hours " +
+                     "FROM tickets";
+        try (Connection conn = DBConnection.getInstance().getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            if (rs.next()) {
+                stats.total = rs.getInt("total");
+                stats.open = rs.getInt("open_cnt");
+                stats.assigned = rs.getInt("assigned_cnt");
+                stats.inProgress = rs.getInt("in_progress_cnt");
+                stats.resolved = rs.getInt("resolved_cnt");
+                double avg = rs.getDouble("avg_hours");
+                stats.avgResolutionHours = rs.wasNull() ? 0.0 : Math.round(avg * 10.0) / 10.0;
+            }
+        } catch (SQLException e) {
+            logger.error("getKPIStats failed: {}", e.getMessage());
+        }
+        return stats;
+    }
+
     public Map<String, Integer> getStatusCounts() {
         Map<String, Integer> map = new HashMap<>();
         String sql = "SELECT status, COUNT(*) as cnt FROM tickets GROUP BY status";
@@ -110,8 +152,13 @@ public class ReportService {
 
     public List<Ticket> getPendingTickets() {
         List<Ticket> list = new ArrayList<>();
-        String sql = "SELECT * FROM tickets WHERE status != 'RESOLVED' " +
-                     "ORDER BY FIELD(priority, 'Critical', 'High', 'Medium', 'Low'), created_at ASC";
+        String sql = "SELECT t.*, u_agent.name AS agent_name, u_user.name AS user_name " +
+                     "FROM tickets t " +
+                     "LEFT JOIN agents a ON t.agent_id = a.agent_id " +
+                     "LEFT JOIN users u_agent ON a.user_id = u_agent.user_id " +
+                     "LEFT JOIN users u_user ON t.user_id = u_user.user_id " +
+                     "WHERE t.status != 'RESOLVED' " +
+                     "ORDER BY FIELD(t.priority, 'Critical', 'High', 'Medium', 'Low'), t.created_at ASC";
         try (Connection conn = DBConnection.getInstance().getConnection();
              PreparedStatement ps = conn.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
@@ -129,6 +176,12 @@ public class ReportService {
                 t.setCreatedAt(rs.getTimestamp("created_at"));
                 t.setUpdatedAt(rs.getTimestamp("updated_at"));
                 t.setResolvedAt(rs.getTimestamp("resolved_at"));
+                try {
+                    t.setAgentName(rs.getString("agent_name"));
+                } catch (SQLException ignored) {}
+                try {
+                    t.setUserName(rs.getString("user_name"));
+                } catch (SQLException ignored) {}
                 list.add(t);
             }
         } catch (SQLException e) {

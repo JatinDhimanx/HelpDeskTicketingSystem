@@ -155,55 +155,102 @@ public class UserTicketPanel extends JPanel {
     }
 
     public void loadTickets() {
-        tableModel.setRowCount(0);
-        List<Ticket> list = ticketService.getTicketsForUser(currentUser.getUserId());
         String selectedStatus = (String) statusFilter.getSelectedItem();
-
-        for (Ticket t : list) {
-            if ("All".equalsIgnoreCase(selectedStatus) || selectedStatus.equalsIgnoreCase(t.getStatus())) {
-                tableModel.addRow(new Object[]{
-                        t.getTicketId(),
-                        t.getTitle(),
-                        t.getCategory(),
-                        t.getPriority(),
-                        t.getStatus(),
-                        t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
-                });
+        SwingWorker<List<Ticket>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Ticket> doInBackground() {
+                return ticketService.getTicketsForUser(currentUser.getUserId());
             }
-        }
+
+            @Override
+            protected void done() {
+                try {
+                    List<Ticket> list = get();
+                    tableModel.setRowCount(0);
+                    for (Ticket t : list) {
+                        if ("All".equalsIgnoreCase(selectedStatus) || selectedStatus.equalsIgnoreCase(t.getStatus())) {
+                            tableModel.addRow(new Object[]{
+                                    t.getTicketId(),
+                                    t.getTitle(),
+                                    t.getCategory(),
+                                    t.getPriority(),
+                                    t.getStatus(),
+                                    t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
+                            });
+                        }
+                    }
+                } catch (Exception ignored) {}
+            }
+        };
+        worker.execute();
     }
 
     private void onTicketSelected() {
         int row = ticketTable.getSelectedRow();
         if (row >= 0) {
             int ticketId = (Integer) tableModel.getValueAt(row, 0);
-            Ticket t = ticketService.getTicketById(ticketId);
+            detailHeaderLabel.setText("Loading ticket #" + ticketId + "...");
+            descriptionArea.setText("Loading details...");
+            resolutionNotesArea.setText("Loading updates...");
 
-            String statusTag = " [" + t.getStatus() + "]";
-            detailHeaderLabel.setText("#" + t.getTicketId() + " - " + t.getTitle() + statusTag);
-            descriptionArea.setText(t.getDescription());
+            SwingWorker<TicketDetailData, Void> worker = new SwingWorker<>() {
+                @Override
+                protected TicketDetailData doInBackground() {
+                    Ticket t = ticketService.getTicketById(ticketId);
+                    List<TicketNote> notes = ticketService.getNotesForTicket(ticketId);
+                    return new TicketDetailData(t, notes);
+                }
 
-            List<TicketNote> notes = ticketService.getNotesForTicket(ticketId);
-            if (notes.isEmpty()) {
-                if ("RESOLVED".equalsIgnoreCase(t.getStatus())) {
-                    resolutionNotesArea.setText("This ticket is resolved. No additional comments logged.");
-                } else {
-                    resolutionNotesArea.setText("Your ticket is currently in progress. An agent will post updates here.");
+                @Override
+                protected void done() {
+                    try {
+                        TicketDetailData data = get();
+                        Ticket t = data.ticket;
+                        if (t != null) {
+                            String statusTag = " [" + t.getStatus() + "]";
+                            String agentTag = t.getAgentName() != null && !t.getAgentName().isEmpty() 
+                                    ? " | Support: " + t.getAgentName() 
+                                    : "";
+                            detailHeaderLabel.setText("#" + t.getTicketId() + " - " + t.getTitle() + statusTag + agentTag);
+                            descriptionArea.setText(t.getDescription());
+
+                            List<TicketNote> notes = data.notes;
+                            if (notes.isEmpty()) {
+                                if ("RESOLVED".equalsIgnoreCase(t.getStatus())) {
+                                    resolutionNotesArea.setText("This ticket is resolved. No additional comments logged.");
+                                } else {
+                                    resolutionNotesArea.setText("Your ticket is currently in progress. An agent will post updates here.");
+                                }
+                            } else {
+                                StringBuilder sb = new StringBuilder();
+                                for (TicketNote n : notes) {
+                                    String time = n.getCreatedAt() != null ? dateFormat.format(n.getCreatedAt()) : "";
+                                    sb.append("• ").append(time).append(" Support Update:\n  ")
+                                      .append(n.getNote()).append("\n\n");
+                                }
+                                resolutionNotesArea.setText(sb.toString());
+                                resolutionNotesArea.setCaretPosition(0);
+                            }
+                        }
+                    } catch (Exception ex) {
+                        detailHeaderLabel.setText("Error loading ticket #" + ticketId);
+                    }
                 }
-            } else {
-                StringBuilder sb = new StringBuilder();
-                for (TicketNote n : notes) {
-                    String time = n.getCreatedAt() != null ? dateFormat.format(n.getCreatedAt()) : "";
-                    sb.append("? ").append(time).append(" Support Update:\n  ")
-                      .append(n.getNote()).append("\n\n");
-                }
-                resolutionNotesArea.setText(sb.toString());
-                resolutionNotesArea.setCaretPosition(0);
-            }
+            };
+            worker.execute();
         } else {
             detailHeaderLabel.setText("Select a ticket to view resolution information");
             descriptionArea.setText("");
             resolutionNotesArea.setText("");
+        }
+    }
+
+    private static class TicketDetailData {
+        final Ticket ticket;
+        final List<TicketNote> notes;
+        TicketDetailData(Ticket ticket, List<TicketNote> notes) {
+            this.ticket = ticket;
+            this.notes = notes;
         }
     }
 }

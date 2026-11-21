@@ -61,7 +61,10 @@ public class AgentTicketPanel extends JPanel {
         title.setFont(UIConstants.FONT_TITLE);
         title.setForeground(UIConstants.TEXT_PRIMARY);
 
-        String agentInfo = currentAgent != null ? "Logged in as Agent #" + currentAgent.getAgentId() + " (" + currentUser.getName() + ")" : currentUser.getName();
+        String displayName = (currentAgent != null && currentAgent.getName() != null && !currentAgent.getName().isEmpty())
+                ? currentAgent.getName()
+                : (currentAgent != null ? "Agent " + currentAgent.getAgentId() : currentUser.getName());
+        String agentInfo = "Logged in as " + displayName + " (" + currentUser.getEmail() + ")";
         JLabel subtitle = new JLabel(agentInfo + " - Update ticket statuses, append resolution progress and close tickets.");
         subtitle.setFont(UIConstants.FONT_BODY);
         subtitle.setForeground(UIConstants.TEXT_SECONDARY);

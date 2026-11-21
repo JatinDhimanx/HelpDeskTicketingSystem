@@ -113,7 +113,7 @@ public class TicketTablePanel extends JPanel {
             }
         });
 
-        String[] columnNames = {"ID", "Title", "Category", "Priority", "Status", "Agent ID", "Created At", "Resolved At"};
+        String[] columnNames = {"ID", "Title", "Category", "Priority", "Status", "Agent", "Created At", "Resolved At"};
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -129,7 +129,7 @@ public class TicketTablePanel extends JPanel {
         ticketTable.getColumnModel().getColumn(2).setPreferredWidth(100);
         ticketTable.getColumnModel().getColumn(3).setPreferredWidth(90);
         ticketTable.getColumnModel().getColumn(4).setPreferredWidth(100);
-        ticketTable.getColumnModel().getColumn(5).setPreferredWidth(70);
+        ticketTable.getColumnModel().getColumn(5).setPreferredWidth(100);
         ticketTable.getColumnModel().getColumn(6).setPreferredWidth(140);
         ticketTable.getColumnModel().getColumn(7).setPreferredWidth(140);
 
@@ -233,13 +233,16 @@ public class TicketTablePanel extends JPanel {
     private void populateTable(List<Ticket> tickets) {
         tableModel.setRowCount(0);
         for (Ticket t : tickets) {
+            String agentDisplay = t.getAgentName() != null && !t.getAgentName().isEmpty()
+                    ? t.getAgentName()
+                    : (t.getAgentId() != null ? "Agent " + t.getAgentId() : "Unassigned");
             tableModel.addRow(new Object[]{
                     t.getTicketId(),
                     t.getTitle(),
                     t.getCategory(),
                     t.getPriority(),
                     t.getStatus(),
-                    t.getAgentId() != null ? "#" + t.getAgentId() : "Unassigned",
+                    agentDisplay,
                     t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-",
                     t.getResolvedAt() != null ? dateFormat.format(t.getResolvedAt()) : "-"
             });

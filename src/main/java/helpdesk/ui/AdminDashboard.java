@@ -18,11 +18,13 @@ public class AdminDashboard extends JFrame {
 
     private TicketTablePanel ticketTablePanel;
     private AgentAssignmentPanel agentAssignmentPanel;
+    private ManageAgentsPanel manageAgentsPanel;
     private CreateTicketPanel createTicketPanel;
     private ReportsDashboardPanel reportsPanel;
 
     private JButton allTicketsNavBtn;
     private JButton assignAgentsNavBtn;
+    private JButton manageAgentsNavBtn;
     private JButton createTicketNavBtn;
     private JButton reportsNavBtn;
 
@@ -100,6 +102,7 @@ public class AdminDashboard extends JFrame {
 
         allTicketsNavBtn = createNavButton("All Tickets", true);
         assignAgentsNavBtn = createNavButton("Agent Assignment", false);
+        manageAgentsNavBtn = createNavButton("Manage Agents", false);
         createTicketNavBtn = createNavButton("Create Ticket", false);
         reportsNavBtn = createNavButton("Reports & Analytics", false);
 
@@ -116,6 +119,12 @@ public class AdminDashboard extends JFrame {
             cardLayout.show(contentContainer, "ASSIGN_AGENTS");
         });
 
+        manageAgentsNavBtn.addActionListener(e -> {
+            selectNav(manageAgentsNavBtn);
+            manageAgentsPanel.loadAgents();
+            cardLayout.show(contentContainer, "MANAGE_AGENTS");
+        });
+
         createTicketNavBtn.addActionListener(e -> {
             selectNav(createTicketNavBtn);
             cardLayout.show(contentContainer, "CREATE_TICKET");
@@ -130,6 +139,8 @@ public class AdminDashboard extends JFrame {
         sidebar.add(allTicketsNavBtn);
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(assignAgentsNavBtn);
+        sidebar.add(Box.createVerticalStrut(8));
+        sidebar.add(manageAgentsNavBtn);
         sidebar.add(Box.createVerticalStrut(8));
         sidebar.add(createTicketNavBtn);
         sidebar.add(Box.createVerticalStrut(8));
@@ -166,6 +177,7 @@ public class AdminDashboard extends JFrame {
 
         ticketTablePanel = new TicketTablePanel(currentUser, true);
         agentAssignmentPanel = new AgentAssignmentPanel();
+        manageAgentsPanel = new ManageAgentsPanel();
         createTicketPanel = new CreateTicketPanel(currentUser, () -> {
             ticketTablePanel.refreshTickets();
             selectNav(allTicketsNavBtn);
@@ -175,6 +187,7 @@ public class AdminDashboard extends JFrame {
 
         contentContainer.add(ticketTablePanel, "ALL_TICKETS");
         contentContainer.add(agentAssignmentPanel, "ASSIGN_AGENTS");
+        contentContainer.add(manageAgentsPanel, "MANAGE_AGENTS");
         contentContainer.add(createTicketPanel, "CREATE_TICKET");
         contentContainer.add(reportsPanel, "REPORTS");
 
@@ -210,6 +223,7 @@ public class AdminDashboard extends JFrame {
     private void selectNav(JButton activeBtn) {
         styleNavBtn(allTicketsNavBtn, activeBtn == allTicketsNavBtn);
         styleNavBtn(assignAgentsNavBtn, activeBtn == assignAgentsNavBtn);
+        styleNavBtn(manageAgentsNavBtn, activeBtn == manageAgentsNavBtn);
         styleNavBtn(createTicketNavBtn, activeBtn == createTicketNavBtn);
         styleNavBtn(reportsNavBtn, activeBtn == reportsNavBtn);
     }
