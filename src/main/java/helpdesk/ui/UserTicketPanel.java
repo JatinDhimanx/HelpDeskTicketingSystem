@@ -14,7 +14,8 @@ import java.text.SimpleDateFormat;
 import java.util.List;
 
 /**
- * User View for tracking submitted tickets and reading resolution updates (Task 08).
+ * User View for tracking submitted tickets and reading resolution updates (Task
+ * 08).
  */
 public class UserTicketPanel extends JPanel {
 
@@ -41,7 +42,7 @@ public class UserTicketPanel extends JPanel {
         setBackground(UIConstants.BACKGROUND_COLOR);
         setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
-        JPanel topPanel = new JPanel(new BorderLayout(0, 8));
+        JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.setOpaque(false);
 
         JPanel titleBox = new JPanel(new BorderLayout(0, 2));
@@ -58,20 +59,14 @@ public class UserTicketPanel extends JPanel {
 
         JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         filterRow.setOpaque(false);
-        JLabel statLbl = new JLabel("Status:");
-        statLbl.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
-        filterRow.add(statLbl);
-
-        statusFilter = new JComboBox<>(new String[]{"All", "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED"});
+        filterRow.add(new JLabel("Status:"));
+        statusFilter = new JComboBox<>(new String[] { "All", "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED" });
         statusFilter.setFont(UIConstants.FONT_BODY);
-        statusFilter.setPreferredSize(new Dimension(125, 32));
-        statusFilter.setLightWeightPopupEnabled(false);
         statusFilter.addActionListener(e -> loadTickets());
         filterRow.add(statusFilter);
 
         JButton refreshBtn = new JButton("Refresh");
         refreshBtn.setFont(UIConstants.FONT_SMALL);
-        refreshBtn.setPreferredSize(new Dimension(80, 32));
         refreshBtn.addActionListener(e -> loadTickets());
         filterRow.add(refreshBtn);
 
@@ -82,22 +77,20 @@ public class UserTicketPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(520);
         splitPane.setResizeWeight(0.55);
-        splitPane.setContinuousLayout(true);
-        splitPane.setOneTouchExpandable(true);
         splitPane.setBorder(null);
 
         JPanel leftPanel = new JPanel(new BorderLayout());
-        leftPanel.setMinimumSize(new Dimension(300, 200));
         leftPanel.setBackground(UIConstants.CARD_COLOR);
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(10, 10, 10, 10)
-        ));
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)));
 
-        String[] cols = {"ID", "Title", "Category", "Priority", "Status", "Submitted At"};
+        String[] cols = { "ID", "Title", "Category", "Priority", "Status", "Submitted At" };
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int r, int c) { return false; }
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         ticketTable = new JTable(tableModel);
         UIHelper.styleTable(ticketTable);
@@ -114,12 +107,10 @@ public class UserTicketPanel extends JPanel {
         splitPane.setLeftComponent(leftPanel);
 
         JPanel rightPanel = new JPanel(new BorderLayout(0, 12));
-        rightPanel.setMinimumSize(new Dimension(280, 200));
         rightPanel.setBackground(UIConstants.CARD_COLOR);
         rightPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(16, 16, 16, 16)
-        ));
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)));
 
         detailHeaderLabel = new JLabel("Select a ticket to view resolution information");
         detailHeaderLabel.setFont(UIConstants.FONT_HEADING);

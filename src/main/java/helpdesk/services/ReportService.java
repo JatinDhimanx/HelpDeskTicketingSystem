@@ -1,4 +1,3 @@
-package helpdesk.services;
 
 import helpdesk.database.DBConnection;
 import helpdesk.models.Ticket;

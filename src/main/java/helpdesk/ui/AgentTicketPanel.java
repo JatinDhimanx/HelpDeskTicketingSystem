@@ -8,7 +8,6 @@ import helpdesk.services.AgentService;
 import helpdesk.services.TicketService;
 import helpdesk.utils.UIConstants;
 import helpdesk.utils.UIHelper;
-import helpdesk.utils.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -76,17 +75,13 @@ public class AgentTicketPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(520);
         splitPane.setResizeWeight(0.55);
-        splitPane.setContinuousLayout(true);
-        splitPane.setOneTouchExpandable(true);
         splitPane.setBorder(null);
 
         JPanel leftPanel = new JPanel(new BorderLayout(0, 8));
-        leftPanel.setMinimumSize(new Dimension(300, 200));
         leftPanel.setBackground(UIConstants.CARD_COLOR);
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(12, 12, 12, 12)
-        ));
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)));
 
         JPanel tableHeader = new JPanel(new BorderLayout());
         tableHeader.setOpaque(false);
@@ -99,10 +94,12 @@ public class AgentTicketPanel extends JPanel {
         tableHeader.add(refreshBtn, BorderLayout.EAST);
         leftPanel.add(tableHeader, BorderLayout.NORTH);
 
-        String[] cols = {"ID", "Title", "Category", "Priority", "Status", "Created At"};
+        String[] cols = { "ID", "Title", "Category", "Priority", "Status", "Created At" };
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int r, int c) { return false; }
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         ticketTable = new JTable(tableModel);
         UIHelper.styleTable(ticketTable);
@@ -119,12 +116,10 @@ public class AgentTicketPanel extends JPanel {
         splitPane.setLeftComponent(leftPanel);
 
         JPanel rightPanel = new JPanel(new BorderLayout(0, 10));
-        rightPanel.setMinimumSize(new Dimension(300, 200));
         rightPanel.setBackground(UIConstants.CARD_COLOR);
         rightPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(16, 16, 16, 16)
-        ));
+                BorderFactory.createEmptyBorder(16, 16, 16, 16)));
 
         JPanel detailHeader = new JPanel(new BorderLayout(0, 4));
         detailHeader.setOpaque(false);
@@ -149,27 +144,21 @@ public class AgentTicketPanel extends JPanel {
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
 
-        JPanel statusActionRow = new JPanel(new WrapLayout(FlowLayout.LEFT, 8, 6));
+        JPanel statusActionRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 4));
         statusActionRow.setOpaque(false);
         statusActionRow.setAlignmentX(Component.LEFT_ALIGNMENT);
-        JLabel lifecycleLabel = new JLabel("Update Lifecycle:");
-        lifecycleLabel.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
-        statusActionRow.add(lifecycleLabel);
+        statusActionRow.add(new JLabel("Update Lifecycle:"));
 
-        statusCombo = new JComboBox<>(new String[]{"OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED"});
+        statusCombo = new JComboBox<>(new String[] { "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED" });
         statusCombo.setFont(UIConstants.FONT_BODY);
-        statusCombo.setPreferredSize(new Dimension(130, 32));
-        statusCombo.setLightWeightPopupEnabled(false);
         statusActionRow.add(statusCombo);
 
         updateStatusBtn = UIHelper.createStyledButton("Save Status", UIConstants.PRIMARY_COLOR, Color.WHITE);
-        updateStatusBtn.setPreferredSize(new Dimension(100, 32));
         updateStatusBtn.setEnabled(false);
         updateStatusBtn.addActionListener(e -> handleStatusUpdate());
         statusActionRow.add(updateStatusBtn);
 
-        markResolvedBtn = UIHelper.createStyledButton("Quick Resolve", UIConstants.SUCCESS_COLOR, Color.WHITE);
-        markResolvedBtn.setPreferredSize(new Dimension(115, 32));
+        markResolvedBtn = UIHelper.createStyledButton("? Quick Resolve", UIConstants.SUCCESS_COLOR, Color.WHITE);
         markResolvedBtn.setEnabled(false);
         markResolvedBtn.addActionListener(e -> handleQuickResolve());
         statusActionRow.add(markResolvedBtn);
@@ -214,11 +203,7 @@ public class AgentTicketPanel extends JPanel {
         historyScroll.setAlignmentX(Component.LEFT_ALIGNMENT);
         centerPanel.add(historyScroll);
 
-        JScrollPane centerScroll = new JScrollPane(centerPanel);
-        centerScroll.setBorder(null);
-        centerScroll.setOpaque(false);
-        centerScroll.getViewport().setOpaque(false);
-        rightPanel.add(centerScroll, BorderLayout.CENTER);
+        rightPanel.add(centerPanel, BorderLayout.CENTER);
         splitPane.setRightComponent(rightPanel);
         add(splitPane, BorderLayout.CENTER);
     }
@@ -239,7 +224,7 @@ public class AgentTicketPanel extends JPanel {
         }
 
         for (Ticket t : tickets) {
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     t.getTicketId(),
                     t.getTitle(),
                     t.getCategory(),
@@ -286,7 +271,7 @@ public class AgentTicketPanel extends JPanel {
                 String time = n.getCreatedAt() != null ? dateFormat.format(n.getCreatedAt()) : "";
                 String author = n.getAgentId() != null ? "Agent #" + n.getAgentId() : "System";
                 sb.append("[").append(time).append("] ").append(author).append(":\n")
-                  .append(n.getNote()).append("\n\n");
+                        .append(n.getNote()).append("\n\n");
             }
             notesHistoryArea.setText(sb.toString());
             notesHistoryArea.setCaretPosition(0);
@@ -294,7 +279,8 @@ public class AgentTicketPanel extends JPanel {
     }
 
     private void handleStatusUpdate() {
-        if (selectedTicketId == null) return;
+        if (selectedTicketId == null)
+            return;
         String newStatus = (String) statusCombo.getSelectedItem();
         try {
             ticketService.updateTicketStatus(selectedTicketId, newStatus);
@@ -310,12 +296,14 @@ public class AgentTicketPanel extends JPanel {
             loadAgentTickets();
             onTicketSelected();
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Error updating status: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Error updating status: " + ex.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 
     private void handleQuickResolve() {
-        if (selectedTicketId == null) return;
+        if (selectedTicketId == null)
+            return;
         String note = JOptionPane.showInputDialog(this,
                 "Enter resolution summary notes for Ticket #" + selectedTicketId + ":",
                 "Resolve Ticket",
@@ -335,13 +323,15 @@ public class AgentTicketPanel extends JPanel {
                 loadAgentTickets();
                 onTicketSelected();
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Failed to resolve: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Failed to resolve: " + ex.getMessage(), "Error",
+                        JOptionPane.ERROR_MESSAGE);
             }
         }
     }
 
     private void handleAddNote() {
-        if (selectedTicketId == null) return;
+        if (selectedTicketId == null)
+            return;
         String noteText = noteArea.getText().trim();
         if (noteText.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Note cannot be empty.", "Validation", JOptionPane.WARNING_MESSAGE);
@@ -354,7 +344,8 @@ public class AgentTicketPanel extends JPanel {
             noteArea.setText("");
             loadNotesHistory(selectedTicketId);
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Failed to save note: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Failed to save note: " + ex.getMessage(), "Error",
+                    JOptionPane.ERROR_MESSAGE);
         }
     }
 }

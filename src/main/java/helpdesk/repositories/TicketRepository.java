@@ -51,10 +51,11 @@ public class TicketRepository {
     public Optional<Ticket> findById(int ticketId) {
         String sql = BASE_SELECT + " WHERE t.ticket_id = ?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticketId);
             try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) return Optional.of(map(rs));
+                if (rs.next())
+                    return Optional.of(map(rs));
             }
         } catch (SQLException e) {
             logger.error("findById ticket failed for id={}: {}", ticketId, e.getMessage());
@@ -66,9 +67,10 @@ public class TicketRepository {
         List<Ticket> list = new ArrayList<>();
         String sql = BASE_SELECT + " ORDER BY t.created_at DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(map(rs));
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                list.add(map(rs));
         } catch (SQLException e) {
             logger.error("findAll tickets failed: {}", e.getMessage());
         }
@@ -79,10 +81,11 @@ public class TicketRepository {
         List<Ticket> list = new ArrayList<>();
         String sql = BASE_SELECT + " WHERE t.user_id = ? ORDER BY t.created_at DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, userId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+                while (rs.next())
+                    list.add(map(rs));
             }
         } catch (SQLException e) {
             logger.error("findByUserId tickets failed for userId={}: {}", userId, e.getMessage());
@@ -94,10 +97,11 @@ public class TicketRepository {
         List<Ticket> list = new ArrayList<>();
         String sql = BASE_SELECT + " WHERE t.agent_id = ? ORDER BY t.created_at DESC";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, agentId);
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+                while (rs.next())
+                    list.add(map(rs));
             }
         } catch (SQLException e) {
             logger.error("findByAgentId tickets failed for agentId={}: {}", agentId, e.getMessage());
@@ -108,12 +112,14 @@ public class TicketRepository {
     /** Inserts a new ticket and sets the generated ticket_id on the object. */
     public void save(Ticket ticket) {
         String sql = "INSERT INTO tickets (user_id, agent_id, title, description, category, priority, status) " +
-                     "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                "VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+                PreparedStatement ps = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             ps.setInt(1, ticket.getUserId());
-            if (ticket.getAgentId() == null) ps.setNull(2, Types.INTEGER);
-            else ps.setInt(2, ticket.getAgentId());
+            if (ticket.getAgentId() == null)
+                ps.setNull(2, Types.INTEGER);
+            else
+                ps.setInt(2, ticket.getAgentId());
             ps.setString(3, ticket.getTitle());
             ps.setString(4, ticket.getDescription());
             ps.setString(5, ticket.getCategory());
@@ -121,7 +127,8 @@ public class TicketRepository {
             ps.setString(7, ticket.getStatus() != null ? ticket.getStatus() : "OPEN");
             ps.executeUpdate();
             try (ResultSet keys = ps.getGeneratedKeys()) {
-                if (keys.next()) ticket.setTicketId(keys.getInt(1));
+                if (keys.next())
+                    ticket.setTicketId(keys.getInt(1));
             }
             logger.info("Ticket saved: id={}", ticket.getTicketId());
         } catch (SQLException e) {
@@ -131,12 +138,14 @@ public class TicketRepository {
 
     public void update(Ticket ticket) {
         String sql = "UPDATE tickets SET user_id=?, agent_id=?, title=?, description=?, " +
-                     "category=?, priority=?, status=?, resolved_at=? WHERE ticket_id=?";
+                "category=?, priority=?, status=?, resolved_at=? WHERE ticket_id=?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticket.getUserId());
-            if (ticket.getAgentId() == null) ps.setNull(2, Types.INTEGER);
-            else ps.setInt(2, ticket.getAgentId());
+            if (ticket.getAgentId() == null)
+                ps.setNull(2, Types.INTEGER);
+            else
+                ps.setInt(2, ticket.getAgentId());
             ps.setString(3, ticket.getTitle());
             ps.setString(4, ticket.getDescription());
             ps.setString(5, ticket.getCategory());
@@ -154,7 +163,7 @@ public class TicketRepository {
     public void updateStatus(int ticketId, String status) {
         String sql = "UPDATE tickets SET status=? WHERE ticket_id=?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, status);
             ps.setInt(2, ticketId);
             ps.executeUpdate();
@@ -166,9 +175,11 @@ public class TicketRepository {
     public void updateAgent(int ticketId, Integer agentId) {
         String sql = "UPDATE tickets SET agent_id=? WHERE ticket_id=?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-            if (agentId == null) ps.setNull(1, Types.INTEGER);
-            else ps.setInt(1, agentId);
+                PreparedStatement ps = conn.prepareStatement(sql)) {
+            if (agentId == null)
+                ps.setNull(1, Types.INTEGER);
+            else
+                ps.setInt(1, agentId);
             ps.setInt(2, ticketId);
             ps.executeUpdate();
         } catch (SQLException e) {
@@ -179,7 +190,7 @@ public class TicketRepository {
     public void delete(int ticketId) {
         String sql = "DELETE FROM tickets WHERE ticket_id = ?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticketId);
             ps.executeUpdate();
             logger.info("Ticket deleted: id={}", ticketId);
@@ -218,12 +229,13 @@ public class TicketRepository {
         sql.append(" ORDER BY t.created_at DESC");
 
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+                PreparedStatement ps = conn.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
                 ps.setObject(i + 1, params.get(i));
             }
             try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) list.add(map(rs));
+                while (rs.next())
+                    list.add(map(rs));
             }
         } catch (SQLException e) {
             logger.error("findByFilters failed: {}", e.getMessage());
@@ -268,6 +280,19 @@ public class TicketRepository {
             logger.info("Note added for ticket #{}", ticketId);
         } catch (SQLException e) {
             logger.error("saveNote failed for ticketId={}: {}", ticketId, e.getMessage());
+            // Fallback: if foreign key constraint on agentId fails, insert with NULL agent_id
+            if (agentId != null) {
+                try (Connection conn = DBConnection.getInstance().getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+                    ps.setInt(1, ticketId);
+                    ps.setNull(2, Types.INTEGER);
+                    ps.setString(3, note);
+                    ps.executeUpdate();
+                    logger.info("Note added for ticket #{} with fallback null agent", ticketId);
+                } catch (SQLException ex) {
+                    logger.error("saveNote fallback failed: {}", ex.getMessage());
+                }
+            }
         }
     }
 

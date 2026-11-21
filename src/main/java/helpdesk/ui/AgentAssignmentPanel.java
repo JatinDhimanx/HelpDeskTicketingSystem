@@ -59,17 +59,13 @@ public class AgentAssignmentPanel extends JPanel {
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
         splitPane.setDividerLocation(580);
         splitPane.setResizeWeight(0.65);
-        splitPane.setContinuousLayout(true);
-        splitPane.setOneTouchExpandable(true);
         splitPane.setBorder(null);
 
         JPanel leftPanel = new JPanel(new BorderLayout(0, 8));
-        leftPanel.setMinimumSize(new Dimension(320, 200));
         leftPanel.setBackground(UIConstants.CARD_COLOR);
         leftPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(12, 12, 12, 12)
-        ));
+                BorderFactory.createEmptyBorder(12, 12, 12, 12)));
 
         JPanel tableHeader = new JPanel(new BorderLayout());
         tableHeader.setOpaque(false);
@@ -85,10 +81,12 @@ public class AgentAssignmentPanel extends JPanel {
         tableHeader.add(refreshBtn, BorderLayout.EAST);
         leftPanel.add(tableHeader, BorderLayout.NORTH);
 
-        String[] cols = {"ID", "Title", "Category", "Priority", "Status", "Agent"};
+        String[] cols = { "ID", "Title", "Category", "Priority", "Status", "Agent" };
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
-            public boolean isCellEditable(int r, int c) { return false; }
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         ticketTable = new JTable(tableModel);
         UIHelper.styleTable(ticketTable);
@@ -109,8 +107,7 @@ public class AgentAssignmentPanel extends JPanel {
         rightPanel.setBackground(UIConstants.CARD_COLOR);
         rightPanel.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(20, 20, 20, 20)
-        ));
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)));
 
         JLabel assignHeader = new JLabel("Assign / Reassign Ticket");
         assignHeader.setFont(UIConstants.FONT_HEADING);
@@ -134,7 +131,6 @@ public class AgentAssignmentPanel extends JPanel {
         agentCombo = new JComboBox<>();
         agentCombo.setFont(UIConstants.FONT_BODY);
         agentCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
-        agentCombo.setLightWeightPopupEnabled(false);
         agentCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
         agentCombo.addActionListener(e -> updateAgentWorkloadDisplay());
 
@@ -172,11 +168,7 @@ public class AgentAssignmentPanel extends JPanel {
         rightPanel.add(assignButton);
         rightPanel.add(Box.createVerticalGlue());
 
-        JScrollPane rightScroll = new JScrollPane(rightPanel);
-        rightScroll.setBorder(null);
-        rightScroll.setOpaque(false);
-        rightScroll.getViewport().setOpaque(false);
-        splitPane.setRightComponent(rightScroll);
+        splitPane.setRightComponent(rightPanel);
         add(splitPane, BorderLayout.CENTER);
     }
 
@@ -196,7 +188,7 @@ public class AgentAssignmentPanel extends JPanel {
                         String agentDisplay = t.getAgentName() != null && !t.getAgentName().isEmpty()
                                 ? t.getAgentName()
                                 : (t.getAgentId() != null ? "Agent " + t.getAgentId() : "Unassigned");
-                        tableModel.addRow(new Object[]{
+                        tableModel.addRow(new Object[] {
                                 t.getTicketId(),
                                 t.getTitle(),
                                 t.getCategory(),
@@ -205,7 +197,8 @@ public class AgentAssignmentPanel extends JPanel {
                                 agentDisplay
                         });
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         };
         worker.execute();
@@ -227,7 +220,8 @@ public class AgentAssignmentPanel extends JPanel {
                         agentCombo.addItem(new AgentItem(a));
                     }
                     updateAgentWorkloadDisplay();
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         };
         worker.execute();
@@ -270,13 +264,15 @@ public class AgentAssignmentPanel extends JPanel {
                         if (agent.isAvailable()) {
                             availabilityLabel.setText("? Available for assignment");
                             availabilityLabel.setForeground(UIConstants.SUCCESS_COLOR);
-                            if (currentSelectedTicketId != null) assignButton.setEnabled(true);
+                            if (currentSelectedTicketId != null)
+                                assignButton.setEnabled(true);
                         } else {
                             availabilityLabel.setText("? Unavailable (Offline / On Leave)");
                             availabilityLabel.setForeground(UIConstants.ERROR_COLOR);
                             assignButton.setEnabled(false);
                         }
-                    } catch (Exception ignored) {}
+                    } catch (Exception ignored) {
+                    }
                 }
             };
             worker.execute();
@@ -288,13 +284,15 @@ public class AgentAssignmentPanel extends JPanel {
 
     private void handleAssign() {
         if (currentSelectedTicketId == null) {
-            JOptionPane.showMessageDialog(this, "Please select a ticket first.", "No Ticket Selected", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select a ticket first.", "No Ticket Selected",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
         AgentItem item = (AgentItem) agentCombo.getSelectedItem();
         if (item == null) {
-            JOptionPane.showMessageDialog(this, "Please select an agent.", "No Agent Selected", JOptionPane.WARNING_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Please select an agent.", "No Agent Selected",
+                    JOptionPane.WARNING_MESSAGE);
             return;
         }
 
@@ -309,11 +307,11 @@ public class AgentAssignmentPanel extends JPanel {
 
         int confirm = JOptionPane.showConfirmDialog(
                 this,
-                "Assign Ticket #" + currentSelectedTicketId + " to agent " + agent.getName() + " (" + agent.getEmail() + ")?",
+                "Assign Ticket #" + currentSelectedTicketId + " to agent " + agent.getName() + " (" + agent.getEmail()
+                        + ")?",
                 "Confirm Assignment",
                 JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
+                JOptionPane.QUESTION_MESSAGE);
 
         if (confirm == JOptionPane.YES_OPTION) {
             assignButton.setEnabled(false);
@@ -334,7 +332,8 @@ public class AgentAssignmentPanel extends JPanel {
                     try {
                         get();
                         JOptionPane.showMessageDialog(AgentAssignmentPanel.this,
-                                "Ticket #" + currentSelectedTicketId + " assigned successfully to " + agent.getName() + "!",
+                                "Ticket #" + currentSelectedTicketId + " assigned successfully to " + agent.getName()
+                                        + "!",
                                 "Assignment Success",
                                 JOptionPane.INFORMATION_MESSAGE);
                         loadTickets();

@@ -4,20 +4,18 @@ import helpdesk.models.Ticket;
 import helpdesk.services.ReportService;
 import helpdesk.utils.UIConstants;
 import helpdesk.utils.UIHelper;
-import helpdesk.utils.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.ComponentAdapter;
-import java.awt.event.ComponentEvent;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Resolution Reports & Analytics Dashboard (Task 10).
- * Runs aggregate queries asynchronously in background to ensure 60fps responsive UI.
+ * Runs aggregate queries asynchronously in background to ensure 60fps
+ * responsive UI.
  */
 public class ReportsDashboardPanel extends JPanel {
 
@@ -76,7 +74,7 @@ public class ReportsDashboardPanel extends JPanel {
         JPanel kpiContainer = new JPanel(new BorderLayout(0, 8));
         kpiContainer.setOpaque(false);
 
-        JPanel cardsRow = new JPanel(new WrapLayout(FlowLayout.CENTER, 12, 10));
+        JPanel cardsRow = new JPanel(new GridLayout(1, 5, 12, 0));
         cardsRow.setOpaque(false);
 
         totalCard = new StatCard("Total Tickets", "...", UIConstants.PRIMARY_COLOR);
@@ -91,14 +89,6 @@ public class ReportsDashboardPanel extends JPanel {
         cardsRow.add(inProgressCard);
         cardsRow.add(resolvedCard);
         kpiContainer.add(cardsRow, BorderLayout.CENTER);
-
-        addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                cardsRow.revalidate();
-                cardsRow.repaint();
-            }
-        });
 
         avgResolutionLabel = new JLabel("Average Resolution Time: calculating...", SwingConstants.RIGHT);
         avgResolutionLabel.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD));
@@ -124,9 +114,12 @@ public class ReportsDashboardPanel extends JPanel {
         panel.setBackground(UIConstants.CARD_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        String[] cols = {"Category Name", "Ticket Count", "Percentage of Total"};
+        String[] cols = { "Category Name", "Ticket Count", "Percentage of Total" };
         categoryTableModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         JTable table = new JTable(categoryTableModel);
         UIHelper.styleTable(table);
@@ -140,9 +133,12 @@ public class ReportsDashboardPanel extends JPanel {
         panel.setBackground(UIConstants.CARD_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        String[] cols = {"Priority Level", "Ticket Count", "Percentage of Total"};
+        String[] cols = { "Priority Level", "Ticket Count", "Percentage of Total" };
         priorityTableModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         JTable table = new JTable(priorityTableModel);
         UIHelper.styleTable(table);
@@ -157,9 +153,12 @@ public class ReportsDashboardPanel extends JPanel {
         panel.setBackground(UIConstants.CARD_COLOR);
         panel.setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
-        String[] cols = {"Agent ID", "Agent Name", "Email Address", "Resolved Tickets"};
+        String[] cols = { "Agent ID", "Agent Name", "Email Address", "Resolved Tickets" };
         agentTableModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         JTable table = new JTable(agentTableModel);
         UIHelper.styleTable(table);
@@ -175,7 +174,10 @@ public class ReportsDashboardPanel extends JPanel {
 
         String[] cols = {"ID", "Title", "Category", "Priority", "Status", "Agent", "Age / Created At"};
         pendingTableModel = new DefaultTableModel(cols, 0) {
-            @Override public boolean isCellEditable(int r, int c) { return false; }
+            @Override
+            public boolean isCellEditable(int r, int c) {
+                return false;
+            }
         };
         JTable table = new JTable(pendingTableModel);
         UIHelper.styleTable(table);
@@ -217,7 +219,7 @@ public class ReportsDashboardPanel extends JPanel {
                     categoryTableModel.setRowCount(0);
                     for (Map.Entry<String, Integer> e : data.catMap.entrySet()) {
                         double pct = total > 0 ? (e.getValue() * 100.0 / total) : 0.0;
-                        categoryTableModel.addRow(new Object[]{
+                        categoryTableModel.addRow(new Object[] {
                                 e.getKey(), e.getValue(), String.format("%.1f %%", pct)
                         });
                     }
@@ -225,14 +227,14 @@ public class ReportsDashboardPanel extends JPanel {
                     priorityTableModel.setRowCount(0);
                     for (Map.Entry<String, Integer> e : data.priMap.entrySet()) {
                         double pct = total > 0 ? (e.getValue() * 100.0 / total) : 0.0;
-                        priorityTableModel.addRow(new Object[]{
+                        priorityTableModel.addRow(new Object[] {
                                 e.getKey(), e.getValue(), String.format("%.1f %%", pct)
                         });
                     }
 
                     agentTableModel.setRowCount(0);
                     for (ReportService.AgentResolvedStats s : data.agentStats) {
-                        agentTableModel.addRow(new Object[]{
+                        agentTableModel.addRow(new Object[] {
                                 "#" + s.getAgentId(), s.getName(), s.getEmail(), s.getResolvedCount() + " closed"
                         });
                     }
@@ -242,7 +244,7 @@ public class ReportsDashboardPanel extends JPanel {
                         String agentName = t.getAgentName() != null && !t.getAgentName().isEmpty()
                                 ? t.getAgentName()
                                 : (t.getAgentId() != null ? "Agent " + t.getAgentId() : "Unassigned");
-                        pendingTableModel.addRow(new Object[]{
+                        pendingTableModel.addRow(new Object[] {
                                 t.getTicketId(), t.getTitle(), t.getCategory(), t.getPriority(), t.getStatus(),
                                 agentName,
                                 t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
@@ -264,8 +266,8 @@ public class ReportsDashboardPanel extends JPanel {
         final List<Ticket> pending;
 
         ReportData(ReportService.KPIStats kpi,
-                   Map<String, Integer> catMap, Map<String, Integer> priMap,
-                   List<ReportService.AgentResolvedStats> agentStats, List<Ticket> pending) {
+                Map<String, Integer> catMap, Map<String, Integer> priMap,
+                List<ReportService.AgentResolvedStats> agentStats, List<Ticket> pending) {
             this.kpi = kpi;
             this.catMap = catMap;
             this.priMap = priMap;

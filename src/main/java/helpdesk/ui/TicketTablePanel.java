@@ -5,7 +5,6 @@ import helpdesk.models.User;
 import helpdesk.services.TicketService;
 import helpdesk.utils.UIConstants;
 import helpdesk.utils.UIHelper;
-import helpdesk.utils.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -44,63 +43,49 @@ public class TicketTablePanel extends JPanel {
     }
 
     private void initUI() {
-        setLayout(new BorderLayout(0, 14));
+        setLayout(new BorderLayout(0, 16));
         setBackground(UIConstants.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+        setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
 
-        JPanel filterCard = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 8));
+        JPanel filterCard = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
         filterCard.setBackground(UIConstants.CARD_COLOR);
         filterCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
+                BorderFactory.createEmptyBorder(6, 12, 6, 12)));
 
-        categoryFilter = new JComboBox<>(new String[]{
+        filterCard.add(new JLabel("Category:"));
+        categoryFilter = new JComboBox<>(new String[] {
                 "All", "Technical", "Network", "Hardware", "Software", "Account/Login"
         });
-        categoryFilter.setFont(UIConstants.FONT_BODY);
-        categoryFilter.setPreferredSize(new Dimension(135, 32));
-        categoryFilter.setLightWeightPopupEnabled(false);
-        filterCard.add(createFilterGroup("Category:", categoryFilter));
+        filterCard.add(categoryFilter);
 
-        priorityFilter = new JComboBox<>(new String[]{
+        filterCard.add(new JLabel("Priority:"));
+        priorityFilter = new JComboBox<>(new String[] {
                 "All", "Critical", "High", "Medium", "Low"
         });
-        priorityFilter.setFont(UIConstants.FONT_BODY);
-        priorityFilter.setPreferredSize(new Dimension(105, 32));
-        priorityFilter.setLightWeightPopupEnabled(false);
-        filterCard.add(createFilterGroup("Priority:", priorityFilter));
+        filterCard.add(priorityFilter);
 
-        statusFilter = new JComboBox<>(new String[]{
+        filterCard.add(new JLabel("Status:"));
+        statusFilter = new JComboBox<>(new String[] {
                 "All", "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED"
         });
-        statusFilter.setFont(UIConstants.FONT_BODY);
-        statusFilter.setPreferredSize(new Dimension(120, 32));
-        statusFilter.setLightWeightPopupEnabled(false);
-        filterCard.add(createFilterGroup("Status:", statusFilter));
+        filterCard.add(statusFilter);
 
-        searchField = new JTextField(12);
-        searchField.setFont(UIConstants.FONT_BODY);
-        searchField.setPreferredSize(new Dimension(150, 32));
-        filterCard.add(createFilterGroup("Search:", searchField));
-
-        JPanel buttonGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
-        buttonGroup.setOpaque(false);
+        filterCard.add(new JLabel("Search (ID / Title):"));
+        searchField = new JTextField(14);
+        filterCard.add(searchField);
 
         JButton applyBtn = UIHelper.createStyledButton("Filter", UIConstants.PRIMARY_COLOR, Color.WHITE);
-        applyBtn.setPreferredSize(new Dimension(80, 32));
+        applyBtn.setPreferredSize(new Dimension(80, 30));
         applyBtn.addActionListener(e -> applyFilters());
-        buttonGroup.add(applyBtn);
+        filterCard.add(applyBtn);
 
         JButton resetBtn = new JButton("Reset");
         resetBtn.setFont(UIConstants.FONT_BODY);
         resetBtn.setFocusPainted(false);
         resetBtn.setBackground(Color.WHITE);
-        resetBtn.setPreferredSize(new Dimension(75, 32));
         resetBtn.addActionListener(e -> resetFilters());
-        buttonGroup.add(resetBtn);
-
-        filterCard.add(buttonGroup);
+        filterCard.add(resetBtn);
 
         searchField.addActionListener(e -> applyFilters());
         add(filterCard, BorderLayout.NORTH);
@@ -182,8 +167,11 @@ public class TicketTablePanel extends JPanel {
                             .filter(t -> statParam == null || statParam.equalsIgnoreCase(t.getStatus()))
                             .filter(t -> searchParam == null ||
                                     String.valueOf(t.getTicketId()).contains(searchParam) ||
-                                    (t.getTitle() != null && t.getTitle().toLowerCase().contains(searchParam.toLowerCase())) ||
-                                    (t.getDescription() != null && t.getDescription().toLowerCase().contains(searchParam.toLowerCase())))
+                                    (t.getTitle() != null
+                                            && t.getTitle().toLowerCase().contains(searchParam.toLowerCase()))
+                                    ||
+                                    (t.getDescription() != null
+                                            && t.getDescription().toLowerCase().contains(searchParam.toLowerCase())))
                             .toList();
                 }
             }
@@ -236,7 +224,7 @@ public class TicketTablePanel extends JPanel {
             String agentDisplay = t.getAgentName() != null && !t.getAgentName().isEmpty()
                     ? t.getAgentName()
                     : (t.getAgentId() != null ? "Agent " + t.getAgentId() : "Unassigned");
-            tableModel.addRow(new Object[]{
+            tableModel.addRow(new Object[] {
                     t.getTicketId(),
                     t.getTitle(),
                     t.getCategory(),
@@ -260,16 +248,5 @@ public class TicketTablePanel extends JPanel {
             return (Integer) tableModel.getValueAt(row, 0);
         }
         return null;
-    }
-
-    private JPanel createFilterGroup(String labelText, JComponent component) {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
-        panel.setOpaque(false);
-        JLabel label = new JLabel(labelText);
-        label.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
-        label.setForeground(UIConstants.TEXT_PRIMARY);
-        panel.add(label);
-        panel.add(component);
-        return panel;
     }
 }
