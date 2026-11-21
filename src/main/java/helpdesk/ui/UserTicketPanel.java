@@ -161,7 +161,7 @@ public class UserTicketPanel extends JPanel {
                     tableModel.setRowCount(0);
                     for (Ticket t : list) {
                         if ("All".equalsIgnoreCase(selectedStatus) || selectedStatus.equalsIgnoreCase(t.getStatus())) {
-                            tableModel.addRow(new Object[]{
+                            tableModel.addRow(new Object[] {
                                     t.getTicketId(),
                                     t.getTitle(),
                                     t.getCategory(),
@@ -171,7 +171,8 @@ public class UserTicketPanel extends JPanel {
                             });
                         }
                     }
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         };
         worker.execute();
@@ -200,25 +201,28 @@ public class UserTicketPanel extends JPanel {
                         Ticket t = data.ticket;
                         if (t != null) {
                             String statusTag = " [" + t.getStatus() + "]";
-                            String agentTag = t.getAgentName() != null && !t.getAgentName().isEmpty() 
-                                    ? " | Support: " + t.getAgentName() 
+                            String agentTag = t.getAgentName() != null && !t.getAgentName().isEmpty()
+                                    ? " | Support: " + t.getAgentName()
                                     : "";
-                            detailHeaderLabel.setText("#" + t.getTicketId() + " - " + t.getTitle() + statusTag + agentTag);
+                            detailHeaderLabel
+                                    .setText("#" + t.getTicketId() + " - " + t.getTitle() + statusTag + agentTag);
                             descriptionArea.setText(t.getDescription());
 
                             List<TicketNote> notes = data.notes;
                             if (notes.isEmpty()) {
                                 if ("RESOLVED".equalsIgnoreCase(t.getStatus())) {
-                                    resolutionNotesArea.setText("This ticket is resolved. No additional comments logged.");
+                                    resolutionNotesArea
+                                            .setText("This ticket is resolved. No additional comments logged.");
                                 } else {
-                                    resolutionNotesArea.setText("Your ticket is currently in progress. An agent will post updates here.");
+                                    resolutionNotesArea.setText(
+                                            "Your ticket is currently in progress. An agent will post updates here.");
                                 }
                             } else {
                                 StringBuilder sb = new StringBuilder();
                                 for (TicketNote n : notes) {
                                     String time = n.getCreatedAt() != null ? dateFormat.format(n.getCreatedAt()) : "";
                                     sb.append("• ").append(time).append(" Support Update:\n  ")
-                                      .append(n.getNote()).append("\n\n");
+                                            .append(n.getNote()).append("\n\n");
                                 }
                                 resolutionNotesArea.setText(sb.toString());
                                 resolutionNotesArea.setCaretPosition(0);
@@ -240,6 +244,7 @@ public class UserTicketPanel extends JPanel {
     private static class TicketDetailData {
         final Ticket ticket;
         final List<TicketNote> notes;
+
         TicketDetailData(Ticket ticket, List<TicketNote> notes) {
             this.ticket = ticket;
             this.notes = notes;

@@ -87,6 +87,7 @@ public class UserRepository {
             try (ResultSet keys = ps.getGeneratedKeys()) {
                 if (keys.next()) user.setUserId(keys.getInt(1));
             }
+            helpdesk.services.AuthService.cacheUser(user);
             logger.info("User saved: id={}", user.getUserId());
         } catch (SQLException e) {
             logger.error("save(User) failed: {}", e.getMessage());
@@ -104,6 +105,7 @@ public class UserRepository {
             ps.setString(4, user.getRole());
             ps.setInt(5, user.getUserId());
             ps.executeUpdate();
+            helpdesk.services.AuthService.cacheUser(user);
             logger.info("User updated: id={}", user.getUserId());
         } catch (SQLException e) {
             logger.error("update(User) failed: {}", e.getMessage());

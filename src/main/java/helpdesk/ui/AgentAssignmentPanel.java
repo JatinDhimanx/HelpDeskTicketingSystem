@@ -364,7 +364,8 @@ public class AgentAssignmentPanel extends JPanel {
 
         @Override
         public String toString() {
-            String name = agent.getName() != null && !agent.getName().isEmpty() ? agent.getName() : "Agent " + agent.getAgentId();
+            String name = agent.getName() != null && !agent.getName().isEmpty() ? agent.getName()
+                    : "Agent " + agent.getAgentId();
             String avail = agent.isAvailable() ? "Available" : "Unavailable";
             return name + " (" + agent.getEmail() + ") - [" + avail + "]";
         }

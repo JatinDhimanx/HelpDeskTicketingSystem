@@ -16,10 +16,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Resilient, high-performance pooled database connection manager.
- * Strictly respects cloud database connection quotas (max_user_connections = 5 on filess.io)
- * by capping client-side active physical connections to at most 2, recycling connections,
- * and backing off gracefully if connection limits are temporarily reached.
+ * High-performance, quota-safe database connection manager.
+ * Features:
+ *  - Strict physical connection cap (MAX_CONNECTIONS = 2) for cloud quotas.
+ *  - Timestamp-based fresh connection reuse: skips redundant network pings (isValid)
+ *    when connections are active within 45 seconds, cutting hundreds of milliseconds of latency.
+ *  - Background connection pre-warming (warmUp) for instant first-time query/login execution.
+ *  - Transparent proxy recycling on close().
  */
 public class DBConnection {
 
@@ -29,7 +32,22 @@ public class DBConnection {
     // Strict cap: filess.io free tier max connection limit is 5 across all clients.
     // Setting MAX_CONNECTIONS to 2 guarantees we never exhaust cloud quotas.
     private static final int MAX_CONNECTIONS = 2;
-    private final BlockingQueue<Connection> pool = new ArrayBlockingQueue<>(MAX_CONNECTIONS);
+
+    private static class PooledHolder {
+        final Connection rawConn;
+        volatile long lastUsed;
+
+        PooledHolder(Connection rawConn) {
+            this.rawConn = rawConn;
+            this.lastUsed = System.currentTimeMillis();
+        }
+
+        boolean isFresh() {
+            return (System.currentTimeMillis() - lastUsed) < 45_000L;
+        }
+    }
+
+    private final BlockingQueue<PooledHolder> pool = new ArrayBlockingQueue<>(MAX_CONNECTIONS);
     private final AtomicInteger activeConnections = new AtomicInteger(0);
 
     static {
@@ -41,7 +59,7 @@ public class DBConnection {
     }
 
     private DBConnection() {
-        // Pool is initialized on-demand to avoid opening unnecessary connections at startup
+        // Pool is initialized on-demand or pre-warmed via warmUp()
     }
 
     public static synchronized DBConnection getInstance() {
@@ -49,6 +67,27 @@ public class DBConnection {
             instance = new DBConnection();
         }
         return instance;
+    }
+
+    /**
+     * Asynchronously pre-warms the database connection pool so that the first login
+     * or query does not suffer from initial TCP/TLS handshake latency.
+     */
+    public void warmUp() {
+        Thread warmer = new Thread(() -> {
+            try {
+                logger.info("Pre-warming database connection pool in background...");
+                Connection conn = getConnection();
+                if (conn != null) {
+                    conn.close(); // Return to pool for instant reuse
+                    logger.info("Database connection pre-warmed and pool ready.");
+                }
+            } catch (Exception e) {
+                logger.warn("Database pre-warming encountered: {}", e.getMessage());
+            }
+        }, "DBConnection-Warmer");
+        warmer.setDaemon(true);
+        warmer.start();
     }
 
     private Connection createPhysicalConnection() throws SQLException {
@@ -63,7 +102,8 @@ public class DBConnection {
         for (int attempt = 1; attempt <= 4; attempt++) {
             try {
                 Connection conn = createPhysicalConnection();
-                if (conn != null) return conn;
+                if (conn != null)
+                    return conn;
             } catch (SQLException e) {
                 lastEx = e;
                 String msg = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
@@ -89,15 +129,18 @@ public class DBConnection {
      * is returned to the pool for reuse rather than closed over the network.
      */
     public Connection getConnection() throws SQLException {
-        Connection physicalConn = pool.poll();
+        PooledHolder holder = pool.poll();
 
         // If pool was empty and active physical count < MAX_CONNECTIONS, create a new one
-        if (physicalConn == null && activeConnections.get() < MAX_CONNECTIONS) {
+        if (holder == null && activeConnections.get() < MAX_CONNECTIONS) {
             synchronized (this) {
                 if (activeConnections.get() < MAX_CONNECTIONS) {
                     try {
-                        physicalConn = createPhysicalConnectionWithRetry();
-                        activeConnections.incrementAndGet();
+                        Connection raw = createPhysicalConnectionWithRetry();
+                        if (raw != null) {
+                            holder = new PooledHolder(raw);
+                            activeConnections.incrementAndGet();
+                        }
                     } catch (SQLException e) {
                         logger.warn("Could not create new physical connection: {}", e.getMessage());
                     }
@@ -105,10 +148,10 @@ public class DBConnection {
             }
         }
 
-        // If still null (reached max limit or creation failed), wait for an existing one to be released
-        if (physicalConn == null) {
+        // If still null (reached max limit), wait for an existing one to be released
+        if (holder == null) {
             try {
-                physicalConn = pool.poll(8, TimeUnit.SECONDS);
+                holder = pool.poll(8, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new SQLException("Interrupted waiting for available DB connection", e);
@@ -116,31 +159,40 @@ public class DBConnection {
         }
 
         // Validate physical connection health
-        if (physicalConn != null) {
+        if (holder != null) {
             boolean valid = false;
             try {
-                valid = !physicalConn.isClosed() && physicalConn.isValid(2);
-            } catch (Exception ignored) {}
+                // If the connection was used less than 45s ago, skip network ping for ultra-fast response
+                if (holder.isFresh()) {
+                    valid = !holder.rawConn.isClosed();
+                } else {
+                    valid = !holder.rawConn.isClosed() && holder.rawConn.isValid(1);
+                }
+            } catch (Exception ignored) {
+            }
 
             if (!valid) {
                 try {
-                    physicalConn.close();
-                } catch (Exception ignored) {}
+                    holder.rawConn.close();
+                } catch (Exception ignored) {
+                }
                 activeConnections.decrementAndGet();
-                physicalConn = createPhysicalConnectionWithRetry();
+                Connection fresh = createPhysicalConnectionWithRetry();
+                holder = new PooledHolder(fresh);
                 activeConnections.incrementAndGet();
             }
         } else {
             // As a last fallback, retry creating one
-            physicalConn = createPhysicalConnectionWithRetry();
+            Connection fresh = createPhysicalConnectionWithRetry();
+            holder = new PooledHolder(fresh);
             activeConnections.incrementAndGet();
         }
 
-        final Connection finalConn = physicalConn;
+        final PooledHolder finalHolder = holder;
 
         return (Connection) Proxy.newProxyInstance(
                 Connection.class.getClassLoader(),
-                new Class<?>[]{Connection.class},
+                new Class<?>[] { Connection.class },
                 new InvocationHandler() {
                     private boolean closed = false;
 
@@ -150,12 +202,14 @@ public class DBConnection {
                         if ("close".equals(methodName)) {
                             if (!closed) {
                                 closed = true;
-                                if (!finalConn.isClosed()) {
-                                    boolean offered = pool.offer(finalConn);
+                                if (!finalHolder.rawConn.isClosed()) {
+                                    finalHolder.lastUsed = System.currentTimeMillis();
+                                    boolean offered = pool.offer(finalHolder);
                                     if (!offered) {
                                         try {
-                                            finalConn.close();
-                                        } catch (Exception ignored) {}
+                                            finalHolder.rawConn.close();
+                                        } catch (Exception ignored) {
+                                        }
                                         activeConnections.decrementAndGet();
                                     }
                                 } else {
@@ -165,12 +219,11 @@ public class DBConnection {
                             return null;
                         }
                         if ("isClosed".equals(methodName)) {
-                            return closed || finalConn.isClosed();
+                            return closed || finalHolder.rawConn.isClosed();
                         }
-                        return method.invoke(finalConn, args);
+                        return method.invoke(finalHolder.rawConn, args);
                     }
-                }
-        );
+                });
     }
 
     public static boolean testConnection() {

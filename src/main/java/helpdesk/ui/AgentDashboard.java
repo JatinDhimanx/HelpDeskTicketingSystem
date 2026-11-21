@@ -32,7 +32,7 @@ public class AgentDashboard extends JFrame {
         super("Help Desk - Agent Workspace (" + user.getName() + ")");
         this.currentUser = user;
         this.agentService = new AgentService();
-        this.agent = agentService.getAgentByUserId(user.getUserId()).orElse(null);
+        this.agent = null;
         this.cardLayout = new CardLayout();
         this.contentContainer = new JPanel(this.cardLayout);
 
@@ -154,6 +154,26 @@ public class AgentDashboard extends JFrame {
         contentContainer.add(allTicketsPanel, "ALL_TICKETS");
 
         root.add(contentContainer, BorderLayout.CENTER);
+
+        // Load agent profile asynchronously to avoid freezing the UI during login
+        SwingWorker<Agent, Void> agentWorker = new SwingWorker<>() {
+            @Override
+            protected Agent doInBackground() {
+                return agentService.getAgentByUserId(currentUser.getUserId()).orElse(null);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    agent = get();
+                    availabilityBadge.setText(getAvailabilityText());
+                    availabilityBadge.setForeground(getAvailabilityColor());
+                    toggleAvailBtn.setText(agent != null && agent.isAvailable() ? "Go Offline" : "Go Available");
+                } catch (Exception ignored) {
+                }
+            }
+        };
+        agentWorker.execute();
     }
 
     private void toggleAvailability() {

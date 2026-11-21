@@ -34,7 +34,6 @@ public class ManageAgentsPanel extends JPanel {
     public ManageAgentsPanel() {
         this.agentService = new AgentService();
         initUI();
-        loadAgents();
     }
 
     private void initUI() {

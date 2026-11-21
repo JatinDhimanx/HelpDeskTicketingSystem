@@ -43,7 +43,7 @@ public class AgentTicketPanel extends JPanel {
         this.currentUser = currentUser;
         this.ticketService = new TicketService();
         this.agentService = new AgentService();
-        this.currentAgent = agentService.getAgentByUserId(currentUser.getUserId()).orElse(null);
+        this.currentAgent = null;
 
         initUI();
         loadAgentTickets();
@@ -60,11 +60,13 @@ public class AgentTicketPanel extends JPanel {
         title.setFont(UIConstants.FONT_TITLE);
         title.setForeground(UIConstants.TEXT_PRIMARY);
 
-        String displayName = (currentAgent != null && currentAgent.getName() != null && !currentAgent.getName().isEmpty())
-                ? currentAgent.getName()
-                : (currentAgent != null ? "Agent " + currentAgent.getAgentId() : currentUser.getName());
+        String displayName = (currentAgent != null && currentAgent.getName() != null
+                && !currentAgent.getName().isEmpty())
+                        ? currentAgent.getName()
+                        : (currentAgent != null ? "Agent " + currentAgent.getAgentId() : currentUser.getName());
         String agentInfo = "Logged in as " + displayName + " (" + currentUser.getEmail() + ")";
-        JLabel subtitle = new JLabel(agentInfo + " - Update ticket statuses, append resolution progress and close tickets.");
+        JLabel subtitle = new JLabel(
+                agentInfo + " - Update ticket statuses, append resolution progress and close tickets.");
         subtitle.setFont(UIConstants.FONT_BODY);
         subtitle.setForeground(UIConstants.TEXT_SECONDARY);
 
@@ -210,30 +212,42 @@ public class AgentTicketPanel extends JPanel {
     }
 
     public void loadAgentTickets() {
-        tableModel.setRowCount(0);
-        if (currentAgent == null) {
-            currentAgent = agentService.getAgentByUserId(currentUser.getUserId()).orElse(null);
-        }
+        SwingWorker<List<Ticket>, Void> worker = new SwingWorker<>() {
+            @Override
+            protected List<Ticket> doInBackground() {
+                if (currentAgent == null) {
+                    currentAgent = agentService.getAgentByUserId(currentUser.getUserId()).orElse(null);
+                }
 
-        List<Ticket> tickets;
-        if (currentAgent != null) {
-            tickets = ticketService.getTicketsForAgent(currentAgent.getAgentId());
-        } else {
-            tickets = ticketService.getAllTickets().stream()
-                    .filter(t -> t.getAgentId() != null)
-                    .toList();
-        }
+                if (currentAgent != null) {
+                    return ticketService.getTicketsForAgent(currentAgent.getAgentId());
+                } else {
+                    return ticketService.getAllTickets().stream()
+                            .filter(t -> t.getAgentId() != null)
+                            .toList();
+                }
+            }
 
-        for (Ticket t : tickets) {
-            tableModel.addRow(new Object[] {
-                    t.getTicketId(),
-                    t.getTitle(),
-                    t.getCategory(),
-                    t.getPriority(),
-                    t.getStatus(),
-                    t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
-            });
-        }
+            @Override
+            protected void done() {
+                try {
+                    List<Ticket> tickets = get();
+                    tableModel.setRowCount(0);
+                    for (Ticket t : tickets) {
+                        tableModel.addRow(new Object[] {
+                                t.getTicketId(),
+                                t.getTitle(),
+                                t.getCategory(),
+                                t.getPriority(),
+                                t.getStatus(),
+                                t.getCreatedAt() != null ? dateFormat.format(t.getCreatedAt()) : "-"
+                        });
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+        };
+        worker.execute();
     }
 
     private void onTicketSelected() {

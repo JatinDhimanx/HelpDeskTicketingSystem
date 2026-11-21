@@ -39,6 +39,14 @@ public class TicketEscalationService implements Runnable {
     @Override
     public void run() {
         logger.info("TicketEscalationService started. Interval: {} ms", intervalMillis);
+        try {
+            // Initial 45s delay gives startup and login exclusive priority on the connection pool
+            Thread.sleep(Math.min(intervalMillis, 45_000L));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return;
+        }
+
         while (running && !Thread.currentThread().isInterrupted()) {
             try {
                 escalateOldTickets();

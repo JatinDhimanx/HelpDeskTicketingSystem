@@ -1,4 +1,6 @@
 
+package helpdesk.services;
+
 import helpdesk.database.DBConnection;
 import helpdesk.models.Ticket;
 import org.slf4j.Logger;

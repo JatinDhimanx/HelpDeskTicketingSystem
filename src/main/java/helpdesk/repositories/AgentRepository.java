@@ -126,6 +126,7 @@ public class AgentRepository {
 
                 conn.commit();
                 logger.info("Created new agent: id={} name={} email={}", agentId, name, email);
+                helpdesk.services.AuthService.cacheUser(new helpdesk.models.User(userId, name, email, hash, "AGENT", new java.sql.Timestamp(System.currentTimeMillis())));
                 return new Agent(agentId, userId, name, email, true);
             } catch (SQLException e) {
                 conn.rollback();

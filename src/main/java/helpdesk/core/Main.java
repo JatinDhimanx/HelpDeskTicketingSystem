@@ -51,6 +51,14 @@ public class Main {
             }
         }
 
+        // Pre-warm DB connection pool and user authentication cache asynchronously in background
+        try {
+            helpdesk.database.DBConnection.getInstance().warmUp();
+            new helpdesk.services.AuthService().preWarm();
+        } catch (Throwable t) {
+            logger.warn("Pre-warm initialization skipped: {}", t.getMessage());
+        }
+
         try {
             EscalationManager.start();
         } catch (Exception e) {
