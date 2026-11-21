@@ -1,4 +1,6 @@
-target/
+target/*
+!target/dist/
+!target/dist/HelpDeskTicketingSystem.jar
 .gradle/
 *.class
 .idea/
