@@ -151,6 +151,7 @@ public class AgentTicketPanel extends JPanel {
 
         statusCombo = new JComboBox<>(new String[] { "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED" });
         statusCombo.setFont(UIConstants.FONT_BODY);
+        statusCombo.setLightWeightPopupEnabled(false);
         statusActionRow.add(statusCombo);
 
         updateStatusBtn = UIHelper.createStyledButton("Save Status", UIConstants.PRIMARY_COLOR, Color.WHITE);

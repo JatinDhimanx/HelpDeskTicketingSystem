@@ -34,15 +34,16 @@ public class TicketRepository {
 
         try {
             t.setAgentName(rs.getString("agent_name"));
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) {
+        }
         try {
             t.setUserName(rs.getString("user_name"));
-        } catch (SQLException ignored) {}
+        } catch (SQLException ignored) {
+        }
         return t;
     }
 
-    private static final String BASE_SELECT = 
-            "SELECT t.*, u_agent.name AS agent_name, u_user.name AS user_name " +
+    private static final String BASE_SELECT = "SELECT t.*, u_agent.name AS agent_name, u_user.name AS user_name " +
             "FROM tickets t " +
             "LEFT JOIN agents a ON t.agent_id = a.agent_id " +
             "LEFT JOIN users u_agent ON a.user_id = u_agent.user_id " +
@@ -243,10 +244,11 @@ public class TicketRepository {
         return list;
     }
 
+
     public void updatePriority(int ticketId, String newPriority) {
         String sql = "UPDATE tickets SET priority=? WHERE ticket_id=?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, newPriority);
             ps.setInt(2, ticketId);
             ps.executeUpdate();
@@ -259,7 +261,7 @@ public class TicketRepository {
     public void markResolved(int ticketId) {
         String sql = "UPDATE tickets SET status='RESOLVED', resolved_at=CURRENT_TIMESTAMP WHERE ticket_id=?";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticketId);
             ps.executeUpdate();
             logger.info("Ticket #{} marked as RESOLVED", ticketId);
@@ -271,10 +273,12 @@ public class TicketRepository {
     public void saveNote(int ticketId, Integer agentId, String note) {
         String sql = "INSERT INTO ticket_notes (ticket_id, agent_id, note) VALUES (?, ?, ?)";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticketId);
-            if (agentId == null) ps.setNull(2, Types.INTEGER);
-            else ps.setInt(2, agentId);
+            if (agentId == null)
+                ps.setNull(2, Types.INTEGER);
+            else
+                ps.setInt(2, agentId);
             ps.setString(3, note);
             ps.executeUpdate();
             logger.info("Note added for ticket #{}", ticketId);
@@ -300,7 +304,7 @@ public class TicketRepository {
         List<helpdesk.models.TicketNote> notes = new ArrayList<>();
         String sql = "SELECT * FROM ticket_notes WHERE ticket_id = ? ORDER BY created_at ASC";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+                PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setInt(1, ticketId);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -310,8 +314,7 @@ public class TicketRepository {
                             rs.getInt("ticket_id"),
                             rs.wasNull() ? null : agentId,
                             rs.getString("note"),
-                            rs.getTimestamp("created_at")
-                    );
+                            rs.getTimestamp("created_at"));
                     notes.add(n);
                 }
             }
@@ -325,9 +328,10 @@ public class TicketRepository {
         List<Ticket> list = new ArrayList<>();
         String sql = BASE_SELECT + " WHERE t.status != 'RESOLVED' ORDER BY t.created_at ASC";
         try (Connection conn = DBConnection.getInstance().getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
-            while (rs.next()) list.add(map(rs));
+                PreparedStatement ps = conn.prepareStatement(sql);
+                ResultSet rs = ps.executeQuery()) {
+            while (rs.next())
+                list.add(map(rs));
         } catch (SQLException e) {
             logger.error("findUnresolved failed: {}", e.getMessage());
         }

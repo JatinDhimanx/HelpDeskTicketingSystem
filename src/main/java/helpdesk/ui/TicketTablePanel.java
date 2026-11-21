@@ -5,6 +5,7 @@ import helpdesk.models.User;
 import helpdesk.services.TicketService;
 import helpdesk.utils.UIConstants;
 import helpdesk.utils.UIHelper;
+import helpdesk.utils.WrapLayout;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -43,62 +44,76 @@ public class TicketTablePanel extends JPanel {
     }
 
     private void initUI() {
-        setLayout(new BorderLayout(0, 16));
+        setLayout(new BorderLayout(0, 14));
         setBackground(UIConstants.BACKGROUND_COLOR);
-        setBorder(BorderFactory.createEmptyBorder(20, 24, 20, 24));
+        setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
 
-        JPanel filterCard = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 10));
+        JPanel filterCard = new JPanel(new WrapLayout(FlowLayout.LEFT, 10, 8));
         filterCard.setBackground(UIConstants.CARD_COLOR);
         filterCard.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(UIConstants.BORDER_COLOR, 1),
-                BorderFactory.createEmptyBorder(6, 12, 6, 12)));
+                BorderFactory.createEmptyBorder(8, 12, 8, 12)));
 
-        filterCard.add(new JLabel("Category:"));
         categoryFilter = new JComboBox<>(new String[] {
                 "All", "Technical", "Network", "Hardware", "Software", "Account/Login"
         });
-        filterCard.add(categoryFilter);
+        categoryFilter.setFont(UIConstants.FONT_BODY);
+        categoryFilter.setPreferredSize(new Dimension(135, 32));
+        categoryFilter.setLightWeightPopupEnabled(false);
+        filterCard.add(createFilterGroup("Category:", categoryFilter));
 
-        filterCard.add(new JLabel("Priority:"));
         priorityFilter = new JComboBox<>(new String[] {
                 "All", "Critical", "High", "Medium", "Low"
         });
-        filterCard.add(priorityFilter);
+        priorityFilter.setFont(UIConstants.FONT_BODY);
+        priorityFilter.setPreferredSize(new Dimension(105, 32));
+        priorityFilter.setLightWeightPopupEnabled(false);
+        filterCard.add(createFilterGroup("Priority:", priorityFilter));
 
-        filterCard.add(new JLabel("Status:"));
         statusFilter = new JComboBox<>(new String[] {
                 "All", "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED"
         });
-        filterCard.add(statusFilter);
+        statusFilter.setFont(UIConstants.FONT_BODY);
+        statusFilter.setPreferredSize(new Dimension(120, 32));
+        statusFilter.setLightWeightPopupEnabled(false);
+        filterCard.add(createFilterGroup("Status:", statusFilter));
 
-        filterCard.add(new JLabel("Search (ID / Title):"));
-        searchField = new JTextField(14);
-        filterCard.add(searchField);
+        searchField = new JTextField(12);
+        searchField.setFont(UIConstants.FONT_BODY);
+        searchField.setPreferredSize(new Dimension(150, 32));
+        searchField.addActionListener(e -> applyFilters());
+        filterCard.add(createFilterGroup("Search:", searchField));
+
+        JPanel buttonGroup = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        buttonGroup.setOpaque(false);
 
         JButton applyBtn = UIHelper.createStyledButton("Filter", UIConstants.PRIMARY_COLOR, Color.WHITE);
-        applyBtn.setPreferredSize(new Dimension(80, 30));
+        applyBtn.setPreferredSize(new Dimension(80, 32));
         applyBtn.addActionListener(e -> applyFilters());
-        filterCard.add(applyBtn);
+        buttonGroup.add(applyBtn);
 
         JButton resetBtn = new JButton("Reset");
         resetBtn.setFont(UIConstants.FONT_BODY);
         resetBtn.setFocusPainted(false);
         resetBtn.setBackground(Color.WHITE);
+        resetBtn.setPreferredSize(new Dimension(75, 32));
         resetBtn.addActionListener(e -> resetFilters());
-        filterCard.add(resetBtn);
+        buttonGroup.add(resetBtn);
 
-        searchField.addActionListener(e -> applyFilters());
+        filterCard.add(buttonGroup);
+
         add(filterCard, BorderLayout.NORTH);
 
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                filterCard.revalidate();
-                filterCard.repaint();
+                revalidate();
+                repaint();
             }
         });
 
-        String[] columnNames = {"ID", "Title", "Category", "Priority", "Status", "Agent", "Created At", "Resolved At"};
+        String[] columnNames = { "ID", "Title", "Category", "Priority", "Status", "Agent", "Created At",
+                "Resolved At" };
         tableModel = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -248,5 +263,16 @@ public class TicketTablePanel extends JPanel {
             return (Integer) tableModel.getValueAt(row, 0);
         }
         return null;
+    }
+
+    private JPanel createFilterGroup(String labelText, JComponent component) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 4, 0));
+        panel.setOpaque(false);
+        JLabel label = new JLabel(labelText);
+        label.setFont(UIConstants.FONT_BODY.deriveFont(Font.BOLD, 12f));
+        label.setForeground(UIConstants.TEXT_PRIMARY);
+        panel.add(label);
+        panel.add(component);
+        return panel;
     }
 }

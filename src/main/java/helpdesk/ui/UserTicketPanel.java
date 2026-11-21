@@ -62,6 +62,7 @@ public class UserTicketPanel extends JPanel {
         filterRow.add(new JLabel("Status:"));
         statusFilter = new JComboBox<>(new String[] { "All", "OPEN", "ASSIGNED", "IN_PROGRESS", "RESOLVED" });
         statusFilter.setFont(UIConstants.FONT_BODY);
+        statusFilter.setLightWeightPopupEnabled(false);
         statusFilter.addActionListener(e -> loadTickets());
         filterRow.add(statusFilter);
 

@@ -130,6 +130,7 @@ public class AgentAssignmentPanel extends JPanel {
 
         agentCombo = new JComboBox<>();
         agentCombo.setFont(UIConstants.FONT_BODY);
+        agentCombo.setLightWeightPopupEnabled(false);
         agentCombo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 36));
         agentCombo.setAlignmentX(Component.LEFT_ALIGNMENT);
         agentCombo.addActionListener(e -> updateAgentWorkloadDisplay());
