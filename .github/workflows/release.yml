@@ -33,6 +33,8 @@ jobs:
           mkdir -p dist
           if [ -f target/HelpDeskTicketingSystem-1.0-SNAPSHOT-jar-with-dependencies.jar ]; then
             cp target/HelpDeskTicketingSystem-1.0-SNAPSHOT-jar-with-dependencies.jar dist/HelpDeskTicketingSystem.jar
+          elif [ -f releases/HelpDeskTicketingSystem.jar ]; then
+            cp releases/HelpDeskTicketingSystem.jar dist/HelpDeskTicketingSystem.jar
           elif [ -f target/dist/HelpDeskTicketingSystem.jar ]; then
             cp target/dist/HelpDeskTicketingSystem.jar dist/HelpDeskTicketingSystem.jar
           elif [ -f target/HelpDeskTicketingSystem-1.0-SNAPSHOT.jar ]; then
